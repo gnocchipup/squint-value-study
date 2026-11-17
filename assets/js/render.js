@@ -62,13 +62,13 @@ export function liveSvgStr(interactive) {
       s += `<path d="${q.d}" fill="rgb(${q.gray},${q.gray},${q.gray})" fill-rule="evenodd" stroke="none"/>`;
     s += '</g>';
   }
-  /* The reference contour mirrors the study: it exists only while the
-     current phase shows an outline, and the Line slider sets its opacity. */
+  /* The reference contour mirrors the study's phases but stays blue so it
+     reads clearly over photographs; the Line slider sets its opacity. */
   if (S.lineOpacity > 0 && outlines.length) {
     s += `<g opacity="${S.lineOpacity}">`;
     for (const q of outlines) {
       s += `<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>`;
-      s += `<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>`;
+      s += `<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="${OVERLAY}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
     }
     s += '</g>';
   }

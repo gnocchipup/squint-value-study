@@ -24,9 +24,9 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
 - **Pre-filters** — Kuwahara, bilateral, Gaussian or none, ahead of thresholding.
 - **Exports** — a self-contained interactive stepped SVG, a landscape PDF with one page per step,
   or a copy of the current step as SVG.
-- **Live-canvas display options** — fills, split dots and curved paths. The reference contour is
-  drawn from the same data as the value study, so it appears in the outline phases, disappears when
-  the study removes the outline, and fades with the Line slider (0 hides it).
+- **Live-canvas display options** — fills, split dots and curved paths. The blue reference contour
+  is drawn from the same data as the value study, so it appears in the outline phases, disappears
+  when the study removes the outline, and fades with the Line slider (0 hides it).
 - **Lichess-inspired light palette** (neutral greys + a single green accent, one shade lighter
   than lichess) with a matching dark theme.
 - **Keyboard-first stepping** — arrow keys, Home/End and PageUp/PageDown.
@@ -77,8 +77,8 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 | Auto-refine starting limit | 4 edges, then coarse → fine steps |
 
 > The live canvas mirrors the study's current phase: fills appear as the study fills levels,
-> and the contour only exists while the study shows an outline. Use the **Line** slider to fade
-> the reference contour; **Split dots** shows the active level's polygon vertices.
+> and the blue contour only exists while the study shows an outline. Use the **Line** slider to
+> fade it; **Split dots** shows the active level's polygon vertices.
 
 ## Deploying to GitHub Pages
 

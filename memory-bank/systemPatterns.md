@@ -58,7 +58,7 @@ assets/js/
 ## Rendering
 
 - `liveSvgStr(true)` = source image + step fills + the same contour as the study (white halo,
-  dark line, `lineOpacity`) + vertex dots + clickable hit paths for the active level (polygon mode
+  blue line, `lineOpacity`) + vertex dots + clickable hit paths for the active level (polygon mode
   only). Hit paths are transparent until hovered/selected.
 - `studySvgStr()` = white rect + step fills + dark contours.
 - `render()` clamps the step, updates slider/nav, rewrites both panes, then updates the editor.

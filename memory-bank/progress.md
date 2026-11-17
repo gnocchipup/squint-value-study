@@ -11,8 +11,9 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Step phases render correctly in both panes.
 - Blocking polygon mode: clickable shapes, selection, per-shape limit (±1/±10/typed/reset/clear).
 - Auto-refine: resets the default limit to 4, refines the current or all levels, reports counts.
-- Live-canvas toggles: fills, split dots, curved paths. The reference contour mirrors the study's
-  outline phase and fades with the Line slider; unselected hit areas are invisible until hovered.
+- Live-canvas toggles: fills, split dots, curved paths. The blue reference contour mirrors the
+  study's outline phase and fades with the Line slider; unselected hit areas are invisible until
+  hovered.
 - Pre-filters, thresholds, gamma, smoothing, segment budget.
 - Exports: stepped SVG, PDF, copy current step SVG.
 - Responsive desktop/mobile layout; dark theme.
@@ -24,9 +25,9 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 
 - `node --check` passed for all ten modules (checked as `.mjs`).
 - Every `$('id')` reference exists in `index.html`.
-- Headless Edge CDP suite: 24 checks passed, zero console/runtime errors, including a real pointer
-  hit-test, contour mirroring/removal, line-slider hiding, header order, shared action-button
-  heights/alignment and mobile stage height.
+- Headless Edge CDP suite: 25 checks passed, zero console/runtime errors, including a real pointer
+  hit-test, contour mirroring/removal and colour, line-slider hiding, header order, shared
+  action-button heights/alignment and mobile stage height.
 - Screenshots reviewed at 1440×900 and 390×844.
 
 ## Known issues / deliberate behaviour
@@ -44,3 +45,5 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   auto-refine behaviour, documented static deployment.
 - v2.1: header hierarchy (Squint above the subtitle); reference contour mirrors the study phase and
   is controlled by the Line slider; invisible hit areas with hover/selection cues.
+- v2.2: action buttons share a height and align; the reference contour stays blue for readability
+  while the study keeps its dark contour.

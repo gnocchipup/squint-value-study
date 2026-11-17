@@ -13,7 +13,8 @@ former workspace modes (preview and value study) are merged.
 - Removed the mode switch, the separate preview bar and duplicate study export buttons.
 - Header hierarchy changed: “Squint” on top, with “Live canvas — Value study” beneath it.
 - New palette: neutral greys and a single green accent, one shade lighter than lichess.
-  Reference contours use the study's dark ink with a white halo; selection uses blue. Dark theme updated.
+  Reference contours stay blue with a white halo for visibility over photos; the study uses dark
+  ink; selection is a dashed blue outline. Dark theme updated.
 - File picker restyled as a button-sized label with an upload icon and a filename line.
 - Defaults: fills on, split dots off, curved paths off. The reference contour follows the study
   phase and its opacity is controlled by the Line slider; the Outlines checkbox was removed.
