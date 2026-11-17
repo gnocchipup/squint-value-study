@@ -51,7 +51,7 @@ button.pri:hover:not(:disabled){background:var(--accent-strong);border-color:var
 
 /* file picker, styled like the standard buttons */
 .source-row{gap:8px}
-.file-btn{position:relative;display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:7px 12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.file-btn{position:relative;display:inline-flex;align-items:center;justify-content:flex-start;margin:0;gap:7px;min-height:34px;padding:7px 12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
 .file-btn:hover{background:var(--panel-2);border-color:var(--line-strong)}
 .file-btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 .file-btn svg{color:var(--accent);flex:0 0 auto}

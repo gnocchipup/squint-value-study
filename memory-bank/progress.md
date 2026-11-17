@@ -16,16 +16,17 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Pre-filters, thresholds, gamma, smoothing, segment budget.
 - Exports: stepped SVG, PDF, copy current step SVG.
 - Responsive desktop/mobile layout; dark theme.
-- Source-image and auto-refine action buttons share a 36 px height; file-picker text matches buttons.
+- Source-image and auto-refine action buttons share a 36 px height and align on both edges;
+  the file-picker label resets the global label margin and matches the button font.
 - README and .gitignore.
 
 ## Validation
 
 - `node --check` passed for all ten modules (checked as `.mjs`).
 - Every `$('id')` reference exists in `index.html`.
-- Headless Edge CDP suite: 22 checks passed, zero console/runtime errors, including a real pointer
+- Headless Edge CDP suite: 24 checks passed, zero console/runtime errors, including a real pointer
   hit-test, contour mirroring/removal, line-slider hiding, header order, shared action-button
-  heights and mobile stage height.
+  heights/alignment and mobile stage height.
 - Screenshots reviewed at 1440×900 and 390×844.
 
 ## Known issues / deliberate behaviour
