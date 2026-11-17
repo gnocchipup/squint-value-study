@@ -19,6 +19,9 @@ former workspace modes (preview and value study) are merged.
   phase and its opacity is controlled by the Line slider; the Outlines checkbox was removed.
 - Clickable hit areas are invisible until hovered or selected; the selected polygon gets a dashed
   blue outline.
+- Source-image actions (Load sample / Choose image) and auto-refine actions (Refine current level /
+  Refine all levels) share one fixed 36 px height; the file-picker label uses the standard button
+  font size.
 - Blocking polygons default to Containing and a 250-edge default limit.
 - Auto-refine now resets `maxSides` to 4 and clears custom limits before growing shapes.
 - Split the app into `index.html`, `assets/css/main.css` and ten ES modules. Old
