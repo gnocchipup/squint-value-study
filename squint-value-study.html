@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Squint — Value Study</title>
+<style>
+:root{--bg:#f2f0e9;--panel:#fffefa;--panel-2:#f8f6f0;--ink:#25231f;--mut:#79756c;--line:#e2ded3;--accent:#e65b2f;--accent-soft:#fff0e9;--shadow:0 12px 32px rgba(43,36,24,.07);box-sizing:border-box}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+button,select,input,textarea{font:inherit}
+.app{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,350px);gap:16px;padding:14px;max-width:1720px;height:100dvh;margin:0 auto;overflow:hidden}
+.sidebar{height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain;padding:6px 2px 24px 4px;scrollbar-width:thin;scrollbar-color:#c9c3b7 transparent}
+.sidebar::-webkit-scrollbar{width:8px}.sidebar::-webkit-scrollbar-thumb{background:#c9c3b7;border:2px solid transparent;background-clip:padding-box;border-radius:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:11px;box-shadow:0 2px 8px rgba(43,36,24,.025)}
+.card h2{font-size:12px;letter-spacing:.035em;text-transform:uppercase;color:#5d584f;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.pill{background:var(--ink);color:#fff;border-radius:999px;padding:4px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;white-space:nowrap}
+label{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--mut);margin-top:9px}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;margin:7px 0 2px}
+select,button,input[type=number],input[type=text]{color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-height:34px}
+select{width:100%;cursor:pointer}button{cursor:pointer;transition:background .15s,border-color .15s,transform .15s}button:hover:not(:disabled){border-color:#c3b9a9;background:#f8f5ee}button:active:not(:disabled){transform:translateY(1px)}button:disabled{opacity:.38;cursor:not-allowed}
+button.pri{background:var(--ink);color:#fff;border-color:var(--ink)}button.pri:hover:not(:disabled){background:#403c34;border-color:#403c34}
+.row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.chips{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:9px}
+.chip{flex:1;height:37px;font-size:10px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;cursor:pointer;position:relative;min-width:0}
+.chip.sel::after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:3px;background:var(--accent);border-radius:3px}
+.chip.fix{cursor:default}
+.chk{display:inline-flex;gap:7px;align-items:center;margin:0;font-size:11px;color:var(--ink);white-space:nowrap}
+.chk input{accent-color:var(--accent);margin:0}
+.note{font-size:11px;color:var(--mut);margin-top:7px;line-height:1.45}
+#dim{font-size:10px}
+#file{max-width:100%;font-size:11px}
+.poly-default{margin-top:5px}
+.workspace{height:calc(100dvh - 28px);min-width:0;min-height:0;display:flex;flex-direction:column;gap:10px;padding:2px 0 2px 1px}
+.workspace-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 4px 1px;flex:0 0 auto;flex-wrap:wrap}
+.workspace-title .eyebrow{display:block;font-size:9px;font-weight:700;letter-spacing:.16em;color:var(--accent);margin-bottom:3px}
+.workspace-title h2{font:600 22px/1.15 Georgia,"Times New Roman",serif;letter-spacing:-.02em;margin:0}
+.workspace-title p{font-size:11px;color:var(--mut);margin:3px 0 0}
+.head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mode-switch{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px}
+.mode-switch button{border:none;background:transparent;min-height:28px;padding:4px 11px;font-size:11px;font-weight:600;border-radius:7px;color:var(--mut)}
+.mode-switch button.active{background:var(--ink);color:#fff}
+.stage{background:#e8e5dc;border:1px solid #d9d4c8;border-radius:13px;padding:12px;display:flex;justify-content:center;align-items:center;min-height:0;flex:1 1 auto;overflow:hidden;box-shadow:inset 0 1px 3px rgba(40,34,24,.04)}
+.stage svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block;box-shadow:0 3px 18px #0002;background:#fff}
+
+/* Value Study split stage */
+.study-stage{background:#e8e5dc;border:1px solid #d9d4c8;border-radius:13px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:14px;min-height:0;flex:1 1 auto;overflow:hidden;box-shadow:inset 0 1px 3px rgba(40,34,24,.04)}
+.study-pane{display:flex;flex-direction:column;min-width:0;min-height:0;gap:6px}
+.pane-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5d584f;padding:0 2px;flex:0 0 auto}
+.pane-sub{font-weight:500;letter-spacing:0;text-transform:none;color:var(--mut);font-size:11px}
+.pane-box{flex:1 1 auto;min-height:0;display:flex;justify-content:center;align-items:center;overflow:hidden}
+.pane-box svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block;box-shadow:0 3px 18px #0002;background:#fff}
+.study-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 11px;flex:0 0 auto;flex-wrap:wrap}
+.study-nav{display:flex;align-items:center;gap:6px}
+.study-nav button{font-size:11px;font-weight:600;padding:5px 10px;min-height:31px}
+.study-scrubber{display:grid;grid-template-columns:minmax(100px,180px) auto;align-items:center;gap:9px;flex:1;min-width:170px}
+.study-scrubber input[type=range]{margin:0}
+.study-step-info{font-size:11px;white-space:nowrap}
+.study-step-info strong{color:var(--ink);font-weight:700}
+.study-step-info span{color:var(--mut);margin-left:5px}
+.study-opts{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.opacity-ctrl{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink);margin:0}
+.opacity-ctrl input[type=range]{width:64px;margin:0}
+
+.selected-tools{display:grid;grid-template-columns:minmax(170px,1fr) auto;align-items:center;gap:10px 16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:0 2px 8px rgba(43,36,24,.025);flex:0 0 auto}
+.selected-copy .eyebrow{font-size:9px;font-weight:700;letter-spacing:.13em;color:var(--accent)}
+.selected-copy strong{display:block;font-size:12px;margin-top:1px}
+.selected-copy .note{margin-top:2px}
+.edge-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.edge-label{font-size:10px;color:var(--mut);font-weight:600;margin-right:3px}
+.edge-tools button{min-width:38px;padding:5px 8px;min-height:32px;font-size:11px;font-weight:650}
+#shapeSides{width:76px;min-height:32px;padding:5px 7px;text-align:center;font-size:12px;font-weight:700;border-color:#d6cfc1}
+.selected-actions{grid-column:1/-1;display:flex;gap:6px;justify-content:flex-end}
+.selected-actions button{min-height:28px;padding:4px 9px;font-size:10px;color:var(--mut)}
+.view-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 11px;flex:0 0 auto}
+.view-pass{display:grid;grid-template-columns:auto minmax(90px,190px) auto;align-items:center;gap:8px;min-width:0;flex:1}
+.view-pass .pass-label{font-size:11px;font-weight:650;color:var(--ink);white-space:nowrap}
+.view-pass input[type=range]{margin:0}
+.view-pass button{font-size:11px;white-space:nowrap}
+.view-toggles{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.view-toggles .copy-btn{font-size:11px;padding:6px 10px;min-height:31px}
+textarea{width:100%;height:74px;margin-top:0;font:10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;display:none;resize:vertical;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px;flex:0 0 auto}
+@media(max-width:900px){
+ body{overflow:auto}
+ .app{display:flex;flex-direction:column;gap:12px;height:auto;min-height:100dvh;overflow:visible;padding:0 12px 16px}
+ .workspace{order:-1;position:sticky;top:0;z-index:10;width:100%;height:52svh;min-height:300px;max-height:540px;padding:10px 0 9px;background:var(--bg);box-shadow:0 8px 14px -14px #000;gap:7px}
+ .stage,.study-stage{padding:8px;border-radius:10px}
+ .study-stage{gap:8px}
+ .workspace-head{padding:0 3px}
+ .workspace-title h2{font-size:19px}.workspace-title p{display:none}
+ .sidebar{height:auto;overflow:visible;padding:0}
+ .selected-tools{gap:8px;padding:8px 9px}
+ .view-bar,.study-bar{gap:8px;padding:8px;align-items:flex-start;flex-wrap:wrap}
+ .view-pass{flex-basis:100%;grid-template-columns:auto minmax(70px,1fr) auto}
+ .view-toggles{justify-content:flex-start;gap:9px}
+}
+@media(max-width:520px){
+ .workspace{height:48svh;min-height:270px}
+ .selected-tools{grid-template-columns:1fr;gap:6px}
+ .edge-tools{justify-content:flex-start}
+ .selected-actions{grid-column:auto;justify-content:flex-start}
+ .workspace-title .eyebrow{font-size:8px}
+ .pill{font-size:9px;padding:4px 8px}
+ .view-toggles{gap:8px}
+}
+@media(prefers-color-scheme:dark){
+ :root{color-scheme:dark;--bg:#191916;--panel:#24231f;--panel-2:#2d2a24;--ink:#eee9df;--mut:#a49d90;--line:#403d35;--accent:#ff7952;--accent-soft:#3c2922;--shadow:0 12px 32px rgba(0,0,0,.24)}
+ .card h2,.pane-head{color:#d2cbbb}
+ .pill{background:#e5dfd2;color:#26231e}
+ .mode-switch button.active{background:#e5dfd2;color:#26231e}
+ button:hover:not(:disabled){border-color:#625a4d;background:#333027}
+ button.pri{background:#e5dfd2;color:#26231e;border-color:#e5dfd2}
+ button.pri:hover:not(:disabled){background:#cfc6b6;border-color:#cfc6b6}
+ .stage,.study-stage{background:#302e28;border-color:#474238}
+ #shapeSides{border-color:#5b5448}
+ .selected-actions button{color:#b9b1a3}
+ .workspace{color:var(--ink)}
+}
+</style></head><body>
+<div class="app">
+ <main class="workspace">
+  <header class="workspace-head">
+   <div class="workspace-title">
+    <span class="eyebrow" id="wsEyebrow">LIVE CANVAS</span>
+    <h2 id="wsTitle">Squint</h2>
+    <p id="wsDesc">Select a polygon to refine its edge count.</p>
+   </div>
+   <div class="head-actions">
+    <div class="mode-switch" role="tablist" aria-label="Workspace mode">
+     <button id="btnModePreview" class="active" role="tab" aria-selected="true">Preview</button>
+     <button id="btnModeStudy" role="tab" aria-selected="false">Value Study</button>
+    </div>
+    <span class="pill" id="vPass"></span>
+   </div>
+  </header>
+
+  <!-- Single Preview Stage -->
+  <div class="stage" id="stage"></div>
+
+  <!-- Side-by-side Value Study Stage -->
+  <div class="study-stage" id="studyStage" style="display:none">
+   <div class="study-pane">
+    <div class="pane-head"><span>Original + Step Overlay</span><span class="pane-sub" id="overlayBadge">Line 90% · Fill 25%</span></div>
+    <div class="pane-box" id="studyLeft"></div>
+   </div>
+   <div class="study-pane">
+    <div class="pane-head"><span>Progressive Step</span><span class="pane-sub" id="stepStageSub">Blank white base</span></div>
+    <div class="pane-box" id="studyRight"></div>
+   </div>
+  </div>
+
+  <!-- Polygon Editor (Preview mode only) -->
+  <section class="selected-tools" id="selectedTools" style="display:none">
+   <div class="selected-copy"><span class="eyebrow">POLYGON EDITOR</span><strong>Selected polygon</strong><div class="note" id="selTxt">Click a shape in the preview to edit its edges.</div><div class="note">Use ±10 or type a new limit up to 1,000. The available contour detail sets the practical maximum.</div></div>
+   <div class="edge-tools"><span class="edge-label">Edge limit</span><button id="sMinus10" title="Reduce the edge limit by 10">−10</button><button id="sMinus" title="Reduce the edge limit by 1">−1</button><input id="shapeSides" type="number" min="4" max="1000" step="1" value="7" aria-label="Selected polygon edge limit"><button id="sPlus" title="Increase the edge limit by 1">+1</button><button id="sPlus10" title="Increase the edge limit by 10">+10</button></div>
+   <div class="selected-actions"><button id="sReset">Reset selected polygon</button><button id="sClear">Clear all custom limits</button></div>
+  </section>
+
+  <!-- Bottom Bar: Preview Mode -->
+  <section class="view-bar" id="previewBar">
+   <div class="view-pass"><span class="pass-label">Pass</span><input type="range" id="pass" min="1" max="4" value="4"><button id="play">▶ Play passes</button></div>
+   <div class="view-toggles"><label class="chk"><input type="checkbox" id="fills" checked>Fills</label><label class="chk"><input type="checkbox" id="lines">Outlines</label><label class="chk"><input type="checkbox" id="dots" checked>Split dots</label><label class="chk"><input type="checkbox" id="curves" checked>Curved paths</label><button id="exportSteps" class="copy-btn pri" title="Download a self-contained SVG with its own step controls">Export stepped SVG</button><button id="exportPdf" class="copy-btn" title="Download a landscape PDF, one page per step, with reference + vector panes">Export PDF</button><button id="copy" class="copy-btn">Copy current SVG</button></div>
+  </section>
+
+  <!-- Bottom Bar: Value Study Mode -->
+  <section class="study-bar" id="studyBar" style="display:none">
+   <div class="study-nav">
+    <button id="studyPrev" title="Previous step (Left Arrow)">← Prev</button>
+    <button id="studyNext" title="Next step (Right Arrow)">Next →</button>
+   </div>
+   <div class="study-scrubber">
+    <input type="range" id="studySlider" min="0" max="12" value="0" aria-label="Progressive value step">
+    <div class="study-step-info"><strong id="studyStepTitle">PURE WHITE</strong><span id="studyStepCount">0 / 12</span></div>
+   </div>
+   <div class="study-opts">
+    <label class="opacity-ctrl" title="Adjust orange outline opacity over the original image"><span>Line</span><input type="range" id="lineOpacity" min="0" max="1" step="0.05" value="0.9"></label>
+    <label class="opacity-ctrl" title="Adjust greyscale value fill opacity over the original image"><span>Fill</span><input type="range" id="fillOpacity" min="0" max="1" step="0.05" value="0.25"></label>
+    <label class="chk" title="View original image in grayscale luminance"><input type="checkbox" id="studyGray">Grey ref</label>
+    <button id="exportStepsStudy" class="copy-btn pri" title="Download a self-contained SVG with its own step controls">Export stepped SVG</button>
+    <button id="exportPdfStudy" class="copy-btn" title="Download a landscape PDF, one page per step, with reference + vector panes">Export PDF</button>
+   </div>
+  </section>
+
+  <textarea id="code" readonly aria-label="SVG source code"></textarea>
+ </main>
+
+ <aside class="sidebar">
+  <div class="card"><h2>Source image</h2>
+   <div class="row"><button id="sample" class="pri">Load sample</button><input type="file" id="file" accept="image/*"></div>
+   <div class="note" id="dim"></div></div>
+  <div class="card"><h2>Grey steps <span class="pill" id="vSteps"></span></h2>
+   <input type="range" id="steps" min="2" max="9" value="5">
+   <div class="note">The highest step is always black. Select a grey below to adjust where it begins.</div>
+   <div class="chips" id="chips"></div>
+   <label><span id="edLbl">Threshold</span><span id="edVal"></span></label>
+   <input type="range" id="ed" min="1" max="254">
+   <label><span>Threshold curve γ</span><span id="vG"></span></label>
+   <input type="range" id="gamma" min="0.3" max="2.5" step="0.05" value="0.8">
+   <div class="note">γ below 1 pushes thresholds up (darks grow); γ above 1 pulls them down (lights grow). Manual edits override the curve.</div>
+   <div class="row"><button id="auto">Reset thresholds</button></div>
+   <div class="note" id="thrTxt"></div></div>
+  <div class="card"><h2>Shape quality</h2>
+   <label><span>Shape style</span></label>
+   <select id="mode"><option value="curve">Smooth curves (tolerance)</option><option value="poly">Blocking polygons (split worst edge)</option></select>
+   <select id="ptype" style="margin-top:7px;display:none"><option value="in">Inscribed (vertices on the shape)</option><option value="out">Containing (edges outside the shape)</option></select>
+   <div class="poly-default" id="poly-default" style="display:none"><label><span>Default edge limit per shape</span><span id="vMs">7</span></label><input type="range" id="maxs" min="4" max="250" value="7">
+    <div class="note">This is the starting limit for every polygon. You can give a selected polygon its own higher limit in the canvas panel.</div></div>
+   <div class="note">Blocking starts with a rectangle around each shape, then adds the point farthest from an edge until the edge limit or segment budget is reached.</div>
+   <label><span>Pre-filter</span></label>
+   <select id="filt"><option value="kuwahara">Kuwahara (painterly)</option><option value="bilateral">Bilateral (edge-preserving)</option><option value="gauss">Gaussian</option><option value="none">None</option></select>
+   <label><span>Filter strength</span><span id="vFr"></span></label><input type="range" id="fr" min="1" max="6" value="3">
+   <label><span>Ignore shapes smaller than (px²)</span><span id="vMin"></span></label><input type="range" id="minA" min="0" max="600" value="60">
+   <label><span>Contour smoothing</span><span id="vSm"></span></label><input type="range" id="smooth" min="0" max="8" step="0.5" value="2.5">
+   <label><span>Total line-segment budget</span><span id="vSeg"></span></label><input type="range" id="seg" min="100" max="6000" step="50" value="1500">
+   <div class="note" id="segUsed"></div></div>
+  <div class="card"><h2>Auto-refine edges</h2>
+   <label><span>Worst-point tolerance (px)</span><span id="vTol">3</span></label><input type="range" id="tol" min="0.5" max="10" step="0.5" value="3">
+   <label><span>Edge steps, coarse to fine</span><input type="text" id="sched" value="5,3,1" aria-label="Edge step sizes" style="width:90px;text-align:center"></label>
+   <div class="row"><button id="refPass" class="pri">Refine this pass</button><button id="refAll">Refine all passes</button></div>
+   <div class="note" id="refTxt">Blocking polygons only. Adds edges to a shape until no contour point is farther than the tolerance from its polygon. Steps back off after each coarse step so it never overshoots.</div></div>
+ </aside>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let W=0,H=0,lum0=null,lum=null,thr=[],manual={},sel=1,layers=[],timer=null,busy=false;
+let srcDataUrlColor='',srcDataUrlGray='';
+const S={mode:'curve',ptype:'in',maxSides:7,over:{},selKey:null,steps:5,gamma:.8,seg:1500,minA:60,filt:'kuwahara',fr:3,smooth:2.5,pass:4,viewMode:'preview',studyStep:0,lineOpacity:0.9,fillOpacity:0.25,studyGray:false,tol:3};
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+/* ---------- image loading ---------- */
+function loadCanvas(cv){
+ W=cv.width;H=cv.height;
+ srcDataUrlColor=cv.toDataURL('image/png');
+ const ctx=cv.getContext('2d'),imgData=ctx.getImageData(0,0,W,H),d=imgData.data;
+ lum0=new Float32Array(W*H);
+ const grayCv=document.createElement('canvas');grayCv.width=W;grayCv.height=H;
+ const gCtx=grayCv.getContext('2d'),gImg=gCtx.createImageData(W,H),gd=gImg.data;
+ for(let i=0;i<W*H;i++){
+  const y=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];
+  lum0[i]=y;
+  gd[i*4]=gd[i*4+1]=gd[i*4+2]=Math.round(y);
+  gd[i*4+3]=255;
+ }
+ gCtx.putImageData(gImg,0,0);
+ srcDataUrlGray=grayCv.toDataURL('image/png');
+ $('dim').textContent=W+' × '+H+' px · luminance sampled';
+ go(true);
+}
+function sample(){const cv=document.createElement('canvas');cv.width=480;cv.height=600;const c=cv.getContext('2d');
+ let g=c.createLinearGradient(0,0,480,600);g.addColorStop(0,'#bbb');g.addColorStop(1,'#222');c.fillStyle=g;c.fillRect(0,0,480,600);
+ c.fillStyle='rgba(0,0,0,.55)';c.beginPath();c.ellipse(290,470,170,40,-.1,0,7);c.fill();
+ g=c.createRadialGradient(190,220,10,230,280,170);g.addColorStop(0,'#fff');g.addColorStop(.5,'#888');g.addColorStop(1,'#111');
+ c.fillStyle=g;c.beginPath();c.arc(230,290,160,0,7);c.fill();
+ c.fillStyle='#ddd';c.beginPath();c.moveTo(300,330);c.lineTo(450,300);c.lineTo(450,450);c.lineTo(310,480);c.fill();
+ c.fillStyle='#333';c.beginPath();c.moveTo(300,330);c.lineTo(310,480);c.lineTo(260,440);c.lineTo(255,360);c.fill();
+ const im=c.getImageData(0,0,480,600);for(let i=0;i<im.data.length;i+=4){const n=(Math.random()-.5)*40;im.data[i]+=n;im.data[i+1]+=n;im.data[i+2]+=n}
+ c.putImageData(im,0,0);loadCanvas(cv)}
+$('sample').onclick=sample;
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{const k=Math.min(1,680/Math.max(img.width,img.height));
+ const cv=document.createElement('canvas');cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);loadCanvas(cv)};img.src=URL.createObjectURL(f)};
+
+/* ---------- pre-filters ---------- */
+function gauss(a,s){const k=Math.ceil(s*3),w=[];let t=0;for(let i=-k;i<=k;i++){const v=Math.exp(-i*i/(2*s*s));w.push(v);t+=v}
+ const b=new Float32Array(a.length),c=new Float32Array(a.length);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){let q=0;for(let i=-k;i<=k;i++)q+=a[y*W+clamp(x+i,0,W-1)]*w[i+k];b[y*W+x]=q/t}
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){let q=0;for(let i=-k;i<=k;i++)q+=b[clamp(y+i,0,H-1)*W+x]*w[i+k];c[y*W+x]=q/t}
+ return c}
+function bilateral(a,r){const o=new Float32Array(a.length),ss=2*r*r,sr=2*28*28;
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=a[y*W+x];let s=0,t=0;
+  for(let j=-r;j<=r;j++){const yy=clamp(y+j,0,H-1);for(let i=-r;i<=r;i++){const v=a[yy*W+clamp(x+i,0,W-1)];const w=Math.exp(-(i*i+j*j)/ss-(v-c)*(v-c)/sr);s+=v*w;t+=w}}
+  o[y*W+x]=s/t}return o}
+function kuwahara(a,r){const o=new Float32Array(a.length),Q=[[-r,0,-r,0],[0,r,-r,0],[-r,0,0,r],[0,r,0,r]];
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){let bv=1e18,bm=0;
+  for(const[q0,q1,p0,p1]of Q){let s=0,s2=0,n=0;for(let j=p0;j<=p1;j++){const yy=clamp(y+j,0,H-1);for(let i=q0;i<=q1;i++){const v=a[yy*W+clamp(x+i,0,W-1)];s+=v;s2+=v*v;n++}}
+   const m=s/n,vr=s2/n-m*m;if(vr<bv){bv=vr;bm=m}}o[y*W+x]=bm}return o}
+function prefilter(){lum=S.filt==='gauss'?gauss(lum0,S.fr):S.filt==='bilateral'?bilateral(lum0,S.fr):S.filt==='kuwahara'?kuwahara(lum0,S.fr):lum0}
+
+/* ---------- thresholds ---------- */
+function calcThr(){const n=S.steps-1;thr=[];for(let j=0;j<n;j++){thr.push(manual[j]!==undefined?manual[j]:Math.round(255*(1-Math.pow((j+1)/S.steps,1/S.gamma))))}
+ for(let j=1;j<n;j++)if(thr[j]>=thr[j-1])thr[j]=Math.max(1,thr[j-1]-1)}
+const shade=i=>Math.round(255*(1-i/(S.steps-1)));
+const nm=i=>i==0?'W':i==S.steps-1?'B':'G'+(i-1);
+function chips(){const c=$('chips');c.innerHTML='';
+ for(let i=0;i<S.steps;i++){const d=document.createElement('div'),g=shade(i);d.className='chip'+(i==0?' fix':'')+(i==sel?' sel':'');
+  d.style.background=`rgb(${g},${g},${g})`;d.style.color=g>128?'#000':'#fff';d.textContent=nm(i);
+  if(i>0)d.onclick=()=>{sel=i;chips();editor()};c.appendChild(d)}}
+function editor(){const j=sel-1,e=$('ed');if(j<0||j>=thr.length)return;e.value=thr[j];$('edLbl').textContent=nm(sel)+' begins below luminance';$('edVal').textContent=thr[j];
+ $('thrTxt').textContent='Thresholds: '+thr.join(' · ')}
+
+/* ---------- region cleanup ---------- */
+function cleanup(L,minA){if(minA<2)return;const comp=new Int32Array(W*H).fill(-1),q=new Int32Array(W*H);let id=0;
+ for(let s=0;s<W*H;s++){if(comp[s]>=0)continue;const lb=L[s];let h=0,t=0;q[t++]=s;comp[s]=id;const cnt={};
+  while(h<t){const p=q[h++],x=p%W,y=(p/W)|0;
+   for(let k=0;k<4;k++){const nx=x+(k==0?1:k==1?-1:0),ny=y+(k==2?1:k==3?-1:0);if(nx<0||ny<0||nx>=W||ny>=H)continue;const n=ny*W+nx;
+    if(L[n]===lb){if(comp[n]<0){comp[n]=id;q[t++]=n}}else cnt[L[n]]=(cnt[L[n]]||0)+1}}
+  if(t<minA){let b=-1,bc=0;for(const k in cnt)if(cnt[k]>bc){bc=cnt[k];b=+k}if(b>=0)for(let i=0;i<t;i++)L[q[i]]=b}
+  id++}}
+
+/* ---------- tracing / smoothing / simplifying ---------- */
+function trace(m){const V=W+1,bits=new Uint8Array(V*(H+1));
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!m[y*W+x])continue;
+  if(y==0||!m[(y-1)*W+x])bits[y*V+x]|=1;if(x==W-1||!m[y*W+x+1])bits[y*V+x+1]|=2;
+  if(y==H-1||!m[(y+1)*W+x])bits[(y+1)*V+x+1]|=4;if(x==0||!m[y*W+x-1])bits[(y+1)*V+x]|=8}
+ const DX=[1,0,-1,0],DY=[0,1,0,-1],out=[];
+ for(let s=0;s<bits.length;s++)while(bits[s]){let d=0;while(!(bits[s]>>d&1))d++;const pts=[];let v=s,dd=d;
+  do{bits[v]&=~(1<<dd);pts.push(v%V,(v/V)|0);v=((v/V|0)+DY[dd])*V+(v%V)+DX[dd];const b=bits[v];if(!b)break;
+   const r=(dd+1)&3,l=(dd+3)&3;dd=b>>r&1?r:b>>dd&1?dd:l}while(v!==s);
+  out.push(Float32Array.from(pts))}return out}
+function area(p){let a=0;const n=p.length/2;for(let i=0;i<n;i++){const j=(i+1)%n;a+=p[2*i]*p[2*j+1]-p[2*j]*p[2*i+1]}return Math.abs(a/2)}
+function smoothL(p,s){if(s<=0)return p;const n=p.length/2,k=Math.ceil(s*2.5),w=[];let t=0;
+ for(let i=-k;i<=k;i++){const v=Math.exp(-i*i/(2*s*s));w.push(v);t+=v}
+ const o=new Float32Array(p.length);for(let i=0;i<n;i++){let sx=0,sy=0;for(let j=-k;j<=k;j++){const id=(((i+j)%n)+n)%n;sx+=p[2*id]*w[j+k];sy+=p[2*id+1]*w[j+k]}o[2*i]=sx/t;o[2*i+1]=sy/t}return o}
+function rdp(p,eps){const n=p.length/2;if(n<6)return Array.from(p);let f=0,fd=0;
+ for(let i=1;i<n;i++){const d=(p[2*i]-p[0])**2+(p[2*i+1]-p[1])**2;if(d>fd){fd=d;f=i}}
+ const keep=new Uint8Array(n);keep[0]=keep[f]=1;const st=[[0,f],[f,n]];
+ while(st.length){const[a,b]=st.pop();const ax=p[2*a],ay=p[2*a+1],bi=b%n,bx=p[2*bi],by=p[2*bi+1],dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy)||1e-9;let dm=0,mi=-1;
+  for(let i=a+1;i<b;i++){const d=Math.abs((p[2*i]-ax)*dy-(p[2*i+1]-ay)*dx)/L;if(d>dm){dm=d;mi=i}}
+  if(dm>eps){keep[mi]=1;st.push([a,mi],[mi,b])}}
+ const o=[];for(let i=0;i<n;i++)if(keep[i])o.push(p[2*i],p[2*i+1]);return o}
+function dPath(p,cv){const n=p.length/2;if(n<3)return'';const f=v=>(Math.round(v*10)/10);
+ if(!cv||n<4){let s='M'+f(p[0])+' '+f(p[1]);for(let i=1;i<n;i++)s+='L'+f(p[2*i])+' '+f(p[2*i+1]);return s+'Z'}
+ const g=i=>{const k=((i%n)+n)%n;return[p[2*k],p[2*k+1]]};let s='M'+f(p[0])+' '+f(p[1]);
+ for(let i=0;i<n;i++){const a=g(i-1),b=g(i),c=g(i+1),d=g(i+2);
+  s+='C'+f(b[0]+(c[0]-a[0])/6)+' '+f(b[1]+(c[1]-a[1])/6)+' '+f(c[0]-(d[0]-b[0])/6)+' '+f(c[1]-(d[1]-b[1])/6)+' '+f(c[0])+' '+f(c[1])}
+ return s+'Z'}
+
+/* ---------- blocking polygons ---------- */
+function far(p,a,b){const n=p.length/2,ax=p[2*a],ay=p[2*a+1],bi=b%n,dx=p[2*bi]-ax,dy=p[2*bi+1]-ay,L=Math.hypot(dx,dy)||1e-9;let dm=0,mi=-1;
+ for(let i=a+1;i<b;i++){const d=Math.abs((p[2*i]-ax)*dy-(p[2*i+1]-ay)*dx)/L;if(d>dm){dm=d;mi=i}}return[dm,mi]}
+function polyBuild(raw){const loops=[],segs=[];let total=0;LP={};EC={};
+ raw.forEach((l,j)=>l.forEach(p=>{const n=p.length/2;if(n<6)return;let f=0,fd=0;
+  for(let i=1;i<n;i++){const d=(p[2*i]-p[0])**2+(p[2*i+1]-p[1])**2;if(d>fd){fd=d;f=i}}
+  let t=0;for(let i=1;i<n;i++)if(p[2*i+1]<p[2*t+1])t=i;
+  if(t){const q=new Float32Array(p.length);for(let i=0;i<n;i++){const s=(i+t)%n;q[2*i]=p[2*s];q[2*i+1]=p[2*s+1]}p=q}
+  const ex=[0,0,0];for(let i=1;i<n;i++){if(p[2*i]>p[2*ex[0]])ex[0]=i;if(p[2*i+1]>p[2*ex[1]+1])ex[1]=i;if(p[2*i]<p[2*ex[2]])ex[2]=i}
+  let st=[...new Set([0,...ex])].sort((x,y)=>x-y);if(st.length<3)st=[0,Math.floor(n/3),Math.floor(2*n/3)];
+  const o={j,p,keep:new Uint8Array(n),cnt:st.length,key:j+':'+Math.round(p[0])+','+Math.round(p[1])};st.forEach(i=>o.keep[i]=1);LP[o.key]=p;loops.push(o);total+=st.length;
+  st.forEach((a,k)=>{const b=k+1<st.length?st[k+1]:n,[dm,mi]=far(p,a,b);segs.push({o,a,b,dm,mi})})}));
+ while(segs.length){let bi=-1;for(let i=0;i<segs.length;i++){const o=segs[i].o,cap=S.over[o.key]||S.maxSides;if(o.cnt<cap&&(total<S.seg||S.over[o.key])&&(bi<0||segs[i].dm>segs[bi].dm))bi=i}if(bi<0)break;const s=segs[bi];
+  if(s.dm<.35||s.mi<0)break;segs.splice(bi,1);s.o.keep[s.mi]=1;total++;s.o.cnt++;
+  for(const[a,b]of[[s.a,s.mi],[s.mi,s.b]]){const[dm,mi]=far(s.o.p,a,b);segs.push({o:s.o,a,b,dm,mi})}}
+ const out=raw.map(()=>[]);
+ for(const o of loops){const idx=[];o.keep.forEach((k,i)=>{if(k)idx.push(i)});const m=idx.length;if(m<3)continue;const p=o.p,n=p.length/2;
+  let pts=idx.map(i=>[p[2*i],p[2*i+1]]);
+  if(S.ptype==='out'){const ln=[];
+   for(let k=0;k<m;k++){const a=idx[k],b=k+1<m?idx[k+1]:n,A=pts[k],B=pts[(k+1)%m],dx=B[0]-A[0],dy=B[1]-A[1],L=Math.hypot(dx,dy)||1e-9;let mx=0;
+    for(let i=a+1;i<b;i++){const c=((p[2*i]-A[0])*dy-(p[2*i+1]-A[1])*dx)/L;if(c>mx)mx=c}
+    ln.push({x:A[0]+dy/L*mx,y:A[1]-dx/L*mx,dx,dy,m:mx})}
+   pts=pts.map((v,k)=>{const l1=ln[(k-1+m)%m],l2=ln[k],det=l1.dx*l2.dy-l1.dy*l2.dx;if(Math.abs(det)<1e-6)return v;
+    const t=((l2.x-l1.x)*l2.dy-(l2.y-l1.y)*l2.dx)/det,x=l1.x+t*l1.dx,y=l1.y+t*l1.dy;
+    return Math.hypot(x-v[0],y-v[1])>8+3*(l1.m+l2.m)?v:[x,y]})}
+  const fl=pts.flat();fl.key=o.key;out[o.j].push(fl)}
+ return out}
+
+/* ---------- auto-refine: add edges until worst-point distance <= tolerance ---------- */
+let LP={},EC={};
+function errCurve(p){const n=p.length/2,ex=[0,0,0];
+ for(let i=1;i<n;i++){if(p[2*i]>p[2*ex[0]])ex[0]=i;if(p[2*i+1]>p[2*ex[1]+1])ex[1]=i;if(p[2*i]<p[2*ex[2]])ex[2]=i}
+ let st=[...new Set([0,...ex])].sort((x,y)=>x-y);if(st.length<3)st=[0,Math.floor(n/3),Math.floor(2*n/3)];
+ const sg=st.map((a,k)=>{const b=k+1<st.length?st[k+1]:n,[dm,mi]=far(p,a,b);return{a,b,dm,mi}});
+ const E={base:st.length,v:[]};let c=st.length;
+ for(;;){let bi=0,mx=0;sg.forEach((s,i)=>{if(s.dm>mx){mx=s.dm;bi=i}});E.v[c]=mx;
+  if(mx<.35||c>=1000)break;const s=sg.splice(bi,1)[0];c++;
+  for(const[a,b]of[[s.a,s.mi],[s.mi,s.b]]){const[dm,mi]=far(p,a,b);sg.push({a,b,dm,mi})}}
+ E.end=c;return E}
+const getCurve=k=>EC[k]||(LP[k]?(EC[k]=errCurve(LP[k])):null);
+const errAt=(E,c)=>E?E.v[clamp(c,E.base,E.end)]:0;
+function stagedLimit(E,L0,tol,steps){let L=L0;const trail=[L];
+ steps.forEach((s,k)=>{if(errAt(E,L)<=tol)return;
+  while(errAt(E,L)>tol&&L<E.end){L+=s;trail.push(L)}
+  if(k<steps.length-1&&s>1){L-=s;trail.push(L)}});
+ return{limit:Math.min(L,1000),trail}}
+function autoRefine(all){
+ if(S.mode!=='poly'){alert('Set Shape style to Blocking polygons first.');return}
+ const steps=$('sched').value.split(/[ ,]+/).map(Number).filter(v=>v>=1).map(Math.round),st=steps.length?steps:[5,3,1];
+ const p=Math.min(S.pass,S.steps-1),lo=all?0:p-1,hi=all?S.steps-2:p-1;let n=0,added=0;window.lastRefine=[];
+ for(let j=lo;j<=hi;j++)for(const q of layers[j]){const E=getCurve(q.key);if(!E)continue;
+  const L0=Math.max(S.over[q.key]??S.maxSides,S.maxSides),r=stagedLimit(E,L0,S.tol,st);
+  if(r.limit>L0){S.over[q.key]=r.limit;n++;added+=r.limit-L0;window.lastRefine.push({key:q.key,pass:j+1,trail:r.trail})}}
+ $('refTxt').textContent=n?n+' shapes refined · +'+added+' edges · worst point now within '+S.tol+' px (steps +'+st.join(' → +')+')':'Every shape on '+(all?'every pass':nm(p))+' is already within '+S.tol+' px.';
+ go()}
+
+/* ---------- pipeline ---------- */
+function process(refilter){if(!lum0)return;if(refilter||!lum)prefilter();
+ calcThr();const n=S.steps-1,L=new Uint8Array(W*H);
+ for(let i=0;i<W*H;i++){let l=0;const v=lum[i];while(l<n&&v<thr[l])l++;L[i]=l}
+ cleanup(L,S.minA);
+ const raw=[];for(let j=0;j<n;j++){const m=new Uint8Array(W*H);for(let i=0;i<W*H;i++)m[i]=L[i]>j?1:0;
+  raw.push(trace(m).filter(p=>area(p)>=Math.max(4,S.minA*.5)).map(p=>smoothL(p,S.smooth)))}
+ const total=e=>{let t=0;for(const l of raw)for(const p of l)t+=rdp(p,e).length/2;return t};
+ let lo=.05,hi=40,eps=hi;if(S.mode==='poly')eps=0;else if(total(lo)<=S.seg)eps=lo;else{for(let k=0;k<9;k++){const m=(lo+hi)/2;if(total(m)<=S.seg)hi=m;else lo=m}eps=hi}
+ layers=S.mode==='poly'?polyBuild(raw):raw.map(l=>l.map(p=>rdp(p,eps)).filter(p=>p.length>=6));
+ let used=0;for(const l of layers)for(const p of l)used+=p.length/2;
+ $('segUsed').textContent=used+' segments used'+(S.mode==='poly'?'':' · tolerance '+eps.toFixed(2)+' px');
+ $('pass').max=n;if(S.pass>n)S.pass=n;$('pass').value=S.pass;
+ const totalStudySteps=1+n*3;
+ $('studySlider').max=totalStudySteps-1;
+ if(S.studyStep>=totalStudySteps)S.studyStep=totalStudySteps-1;
+ $('studySlider').value=S.studyStep;
+ chips();editor();render()}
+
+/* ---------- render ---------- */
+function svgStr(dots,ui){const n=S.steps-1,p=Math.min(S.pass,n),fl=$('fills').checked,ln=$('lines').checked,cv=$('curves').checked&&S.mode!=='poly';
+ let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+ s+=`<rect width="${W}" height="${H}" fill="${fl?`rgb(${shade(0)},${shade(0)},${shade(0)})`:'#fff'}"/>`;
+ for(let j=0;j<p;j++){const g=shade(j+1),d=layers[j].map(q=>dPath(q,cv)).join('');
+  s+=`<path d="${d}" fill-rule="evenodd" fill="${fl?`rgb(${g},${g},${g})`:'none'}"${ln||!fl?` stroke="${fl?'#3b82f6':'#222'}" stroke-width="${fl?.8:1.2}" stroke-linejoin="round"`:''}/>`}
+ if(dots&&p>0)for(const q of layers[p-1])for(let i=0;i<q.length;i+=2)s+=`<circle cx="${q[i].toFixed(1)}" cy="${q[i+1].toFixed(1)}" r="2.4" fill="#ff4d00" stroke="#fff" stroke-width=".8"/>`;
+ if(ui&&S.mode==='poly'&&p>0){const ls=layers[p-1].slice().sort((a,b)=>area(b)-area(a));
+  for(const q of ls){const on=q.key===S.selKey;s+=`<path data-k="${q.key}" d="${dPath(q,false)}" fill="${on?'rgba(255,77,0,.18)':'transparent'}" stroke="${on?'#ff4d00':'none'}" stroke-width="2" style="cursor:pointer;pointer-events:all"/>`}}
+ return s+'</svg>'}
+
+/* Paths for a given progressive step: what to fill, what to outline */
+function stepParts(step){
+ const layerCount=S.steps-1,cv=$('curves').checked&&S.mode!=='poly';
+ const fills=[],outlines=[];
+ for(let j=0;j<layerCount;j++){
+  let fill=false,outline=false;
+  if(step>0){
+   const n=step-1,level=Math.floor(n/3),phase=n%3;
+   if(j<level)fill=true;
+   else if(j===level){fill=phase>=1;outline=phase<=1;}
+  }
+  if(!fill&&!outline)continue;
+  const d=layers[j].map(q=>dPath(q,cv)).join('');
+  if(fill)fills.push({d,gray:shade(j+1)});
+  if(outline)outlines.push({d});
+ }
+ return {fills,outlines};
+}
+
+function buildSteppedParts(step,isOverlay){
+ const {fills,outlines}=stepParts(step);
+ let f='',o='';
+ for(const q of fills)f+=`<path d="${q.d}" fill="rgb(${q.gray},${q.gray},${q.gray})" fill-rule="evenodd" stroke="none"/>`;
+ for(const q of outlines){
+  const halo=isOverlay?`<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>`:'';
+  const color=isOverlay?'#ff4d00':'#25231f';
+  o+=`${halo}<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="${color}" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>`;
+ }
+ return {fills:f,outlines:o};
+}
+
+function renderStudy(){
+ const layerCount=S.steps-1,totalSteps=1+layerCount*3;
+ S.studyStep=clamp(S.studyStep,0,totalSteps-1);
+ const step=S.studyStep;
+ $('studySlider').max=totalSteps-1;
+ $('studySlider').value=step;
+ $('studyPrev').disabled=step===0;
+ $('studyNext').disabled=step===totalSteps-1;
+
+ let heading,detail;
+ if(step===0){heading='PURE WHITE';detail='Blank white base';}
+ else{
+  const n=step-1,j=Math.floor(n/3),phase=n%3,name=j===layerCount-1?'BLACK':'G'+j;
+  heading=name+' · '+(phase===0?'OUTLINE ONLY':phase===1?'FILL + OUTLINE':'OUTLINE REMOVED');
+  detail='Level '+(j+1)+'/'+layerCount+' · '+(phase===0?'Contour only':phase===1?'Grey fill + contour':'Clean fill');
+ }
+ $('studyStepTitle').textContent=heading;
+ $('studyStepCount').textContent=step+' / '+(totalSteps-1);
+ $('stepStageSub').textContent=detail;
+ $('vPass').textContent='STEP '+step+' / '+(totalSteps-1);
+ $('overlayBadge').textContent=`Line ${Math.round(S.lineOpacity*100)}% · Fill ${Math.round(S.fillOpacity*100)}%`;
+
+ const refHref=S.studyGray?srcDataUrlGray:srcDataUrlColor;
+ const leftParts=buildSteppedParts(step,true);
+ const rightParts=buildSteppedParts(step,false);
+
+ $('studyLeft').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+  <image href="${refHref}" width="${W}" height="${H}"/>
+  <g opacity="${S.fillOpacity}">${leftParts.fills}</g>
+  <g opacity="${S.lineOpacity}">${leftParts.outlines}</g>
+ </svg>`;
+
+ $('studyRight').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+  <rect width="${W}" height="${H}" fill="#ffffff"/>
+  ${rightParts.fills}
+  ${rightParts.outlines}
+ </svg>`;
+}
+
+function render(){
+ if(!layers.length)return;
+ const isStudy=S.viewMode==='study';
+ $('btnModePreview').classList.toggle('active',!isStudy);
+ $('btnModePreview').setAttribute('aria-selected',!isStudy?'true':'false');
+ $('btnModeStudy').classList.toggle('active',isStudy);
+ $('btnModeStudy').setAttribute('aria-selected',isStudy?'true':'false');
+
+ $('stage').style.display=isStudy?'none':'flex';
+ $('studyStage').style.display=isStudy?'grid':'none';
+ $('previewBar').style.display=isStudy?'none':'flex';
+ $('studyBar').style.display=isStudy?'flex':'none';
+
+ if(isStudy){
+  $('selectedTools').style.display='none';
+  $('wsEyebrow').textContent='VALUE STUDY MODE';
+  $('wsDesc').textContent='Compare the active step against the source image on the left while building on the right.';
+  renderStudy();
+ }else{
+  $('wsEyebrow').textContent='LIVE CANVAS';
+  $('wsDesc').textContent='Select a polygon to refine its edge count.';
+  $('stage').innerHTML=svgStr($('dots').checked,true);
+  panel();
+  $('vPass').textContent='PASS '+Math.min(S.pass,S.steps-1)+' / '+(S.steps-1);
+ }
+}
+
+/* ---------- standalone, interactive stepped SVG export ---------- */
+function steppedSvgStr(){
+ const layerCount=S.steps-1,totalSteps=1+layerCount*3;
+ const toolbarH=82,outW=Math.max(W,360),offsetX=(outW-W)/2,sliderX=16,sliderW=outW-32;
+ const cv=$('curves').checked&&S.mode!=='poly';
+ const parts=[];
+ parts.push(`<?xml version="1.0" encoding="UTF-8"?>`);
+ parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${H+toolbarH}" viewBox="0 0 ${outW} ${H+toolbarH}" role="img" aria-labelledby="docTitle docDesc">`);
+ parts.push(`<title id="docTitle">Interactive value study — progressive grey steps</title><desc id="docDesc">Use the Previous and Next buttons, the slider, or the left and right arrow keys to reveal each value level in three stages: outline only, fill with outline, and fill with the outline removed.</desc>`);
+ parts.push(`<rect width="${outW}" height="${H+toolbarH}" fill="#ffffff"/>`);
+ parts.push(`<rect width="${outW}" height="${toolbarH}" fill="#f3f1eb"/><path d="M0 ${toolbarH-.5}H${outW}" stroke="#d8d3c8"/>`);
+ const button=(id,x,label)=>`<g id="${id}" role="button" tabindex="0" aria-label="${label}" style="cursor:pointer"><rect x="${x}" y="11" width="64" height="28" rx="7" fill="#25231f"/><text x="${x+32}" y="29.5" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#ffffff">${label}</text></g>`;
+ parts.push(button('prevStep',12,'← Prev'));
+ parts.push(button('nextStep',82,'Next →'));
+ parts.push(`<text id="stageTitle" x="158" y="22" font-family="system-ui,sans-serif" font-size="12" font-weight="750" fill="#292720">PURE WHITE</text>`);
+ parts.push(`<text id="stageSub" x="158" y="36" font-family="system-ui,sans-serif" font-size="9.5" fill="#716c62">Blank white base</text>`);
+ parts.push(`<text id="stepCount" x="${outW-14}" y="27" text-anchor="end" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#716c62">0 / ${totalSteps-1}</text>`);
+ parts.push(`<g id="stepSlider" role="slider" tabindex="0" aria-label="Progressive value step" aria-valuemin="0" aria-valuemax="${totalSteps-1}" aria-valuenow="0" style="cursor:pointer;touch-action:none"><rect x="${sliderX}" y="47" width="${sliderW}" height="24" fill="transparent"/><line x1="${sliderX}" y1="59" x2="${sliderX+sliderW}" y2="59" stroke="#d0cabe" stroke-width="4" stroke-linecap="round"/><line id="sliderProgress" x1="${sliderX}" y1="59" x2="${sliderX}" y2="59" stroke="#e65b2f" stroke-width="4" stroke-linecap="round"/><circle id="sliderThumb" cx="${sliderX}" cy="59" r="6" fill="#e65b2f" stroke="#ffffff" stroke-width="2"/></g>`);
+ parts.push(`<g transform="translate(${offsetX} ${toolbarH})">`);
+ parts.push(`<rect width="${W}" height="${H}" fill="#ffffff"/>`);
+ for(let j=0;j<layerCount;j++){
+  const d=layers[j].map(q=>dPath(q,cv)).join('');
+  const gray=shade(j+1);
+  parts.push(`<g id="fill-${j}" visibility="visible"><path d="${d}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
+  parts.push(`<g id="outline-${j}" visibility="hidden"><path d="${d}" fill="none" fill-rule="evenodd" stroke="#25231f" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
+ }
+ parts.push(`</g>`);
+ const script=`(function(){
+  'use strict';
+  const COUNT=${layerCount}, TOTAL=${totalSteps}, X0=${sliderX}, XW=${sliderW};
+  const svg=document.documentElement;
+  const byId=id=>document.getElementById(id);
+  const title=byId('stageTitle'), sub=byId('stageSub'), count=byId('stepCount');
+  const thumb=byId('sliderThumb'), progress=byId('sliderProgress'), slider=byId('stepSlider');
+  const prev=byId('prevStep'), next=byId('nextStep');
+  let current=0, dragging=false;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function levelName(j){return j===COUNT-1?'BLACK':'G'+j;}
+  function setStep(value){
+   current=clamp(Math.round(Number(value)||0),0,TOTAL-1);
+   for(let j=0;j<COUNT;j++){
+    let fill=false,outline=false;
+    if(current>0){
+     const n=current-1,level=Math.floor(n/3),phase=n%3;
+     if(j<level)fill=true;
+     else if(j===level){fill=phase>=1;outline=phase<=1;}
+    }
+    byId('fill-'+j).setAttribute('visibility',fill?'visible':'hidden');
+    byId('outline-'+j).setAttribute('visibility',outline?'visible':'hidden');
+   }
+   let heading,detail;
+   if(current===0){heading='PURE WHITE';detail='Blank white base';}
+   else{
+    const n=current-1,j=Math.floor(n/3),phase=n%3,name=levelName(j);
+    heading=name+' · '+(phase===0?'OUTLINE ONLY':phase===1?'FILL + OUTLINE':'OUTLINE REMOVED');
+    detail='Value level '+(j+1)+' of '+COUNT+' · '+(phase===0?'Contour only':phase===1?'Grey fill added; contour remains':'Clean fill; contour hidden');
+   }
+   title.textContent=heading;sub.textContent=detail;count.textContent=current+' / '+(TOTAL-1);
+   const x=X0+(TOTAL===1?0:current/(TOTAL-1))*XW;
+   thumb.setAttribute('cx',x);progress.setAttribute('x2',x);
+   slider.setAttribute('aria-valuenow',current);
+   prev.setAttribute('opacity',current===0?'.38':'1');prev.setAttribute('aria-disabled',current===0?'true':'false');
+   next.setAttribute('opacity',current===TOTAL-1?'.38':'1');next.setAttribute('aria-disabled',current===TOTAL-1?'true':'false');
+  }
+  function moveFromEvent(ev){
+   const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;
+   const local=pt.matrixTransform(slider.getScreenCTM().inverse());
+   setStep((local.x-X0)/XW*(TOTAL-1));
+  }
+  prev.addEventListener('click',()=>setStep(current-1));
+  next.addEventListener('click',()=>setStep(current+1));
+  [prev,next].forEach((el,index)=>el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setStep(current+(index?1:-1));}}));
+  slider.addEventListener('pointerdown',e=>{dragging=true;slider.setPointerCapture(e.pointerId);moveFromEvent(e);});
+  slider.addEventListener('pointermove',e=>{if(dragging)moveFromEvent(e);});
+  slider.addEventListener('pointerup',()=>{dragging=false;});
+  slider.addEventListener('pointercancel',()=>{dragging=false;});
+  slider.addEventListener('keydown',e=>{
+   e.stopPropagation();
+   if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();setStep(current+1);}
+   else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){e.preventDefault();setStep(current-1);}
+   else if(e.key==='Home'){e.preventDefault();setStep(0);}
+   else if(e.key==='End'){e.preventDefault();setStep(TOTAL-1);}
+   else if(e.key==='PageUp'){e.preventDefault();setStep(current+3);}
+   else if(e.key==='PageDown'){e.preventDefault();setStep(current-3);}
+  });
+  document.addEventListener('keydown',e=>{
+   if(e.altKey||e.ctrlKey||e.metaKey)return;
+   if(e.key==='ArrowRight'){e.preventDefault();setStep(current+1);}
+   else if(e.key==='ArrowLeft'){e.preventDefault();setStep(current-1);}
+   else if(e.key==='Home'){e.preventDefault();setStep(0);}
+   else if(e.key==='End'){e.preventDefault();setStep(TOTAL-1);}
+  });
+  setStep(0);
+ })();`;
+ parts.push('<script><![CDATA['+script+']]>');
+ parts.push('</scr'+'ipt>');
+ parts.push('</svg>');
+ return parts.join('');
+}
+function exportSteppedSvg(btnId){
+ if(!layers.length)return;
+ const data=steppedSvgStr(),blob=new Blob([data],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.href=url;a.download='squint-value-study-progressive-steps.svg';document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+ const b=$(btnId),old=b.textContent;b.textContent='Exported ✓';setTimeout(()=>b.textContent=old,1800);
+}
+
+/* ---------- PDF export (landscape, one page per step) ---------- */
+const PDF_W=842,PDF_H=595;   /* A4 landscape, points */
+const loadImg=src=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error('image load failed'));im.src=src});
+function dataUrlBytes(u){
+ const bin=atob(u.slice(u.indexOf(',')+1));
+ const out=new Uint8Array(bin.length);
+ for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);
+ return out;
+}
+function pdfEsc(s){return String(s).replace(/[^\x20-\x7E]/g,'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')}
+
+/* Draw one study pane onto a 2D canvas (mirrors the on-screen SVG panes) */
+function drawStudyPane(ctx,step,isOverlay,refImg,scale){
+ const {fills,outlines}=stepParts(step);
+ ctx.setTransform(scale,0,0,scale,0,0);
+ ctx.lineJoin='round';ctx.lineCap='round';
+ if(isOverlay)ctx.drawImage(refImg,0,0,W,H);
+ else{ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);}
+ ctx.globalAlpha=isOverlay?S.fillOpacity:1;
+ for(const q of fills){ctx.fillStyle=`rgb(${q.gray},${q.gray},${q.gray})`;ctx.fill(new Path2D(q.d),'evenodd');}
+ ctx.globalAlpha=1;
+ if(isOverlay){
+  ctx.globalAlpha=S.lineOpacity*0.7;ctx.strokeStyle='#ffffff';ctx.lineWidth=2.4;
+  for(const q of outlines)ctx.stroke(new Path2D(q.d));
+  ctx.globalAlpha=S.lineOpacity;ctx.strokeStyle='#ff4d00';ctx.lineWidth=1.35;
+  for(const q of outlines)ctx.stroke(new Path2D(q.d));
+  ctx.globalAlpha=1;
+ }else{
+  ctx.strokeStyle='#25231f';ctx.lineWidth=1.35;
+  for(const q of outlines)ctx.stroke(new Path2D(q.d));
+ }
+}
+
+function stepTitleAscii(step){
+ const layerCount=S.steps-1;
+ if(step===0)return 'Pure white - blank base';
+ const n=step-1,j=Math.floor(n/3),phase=n%3;
+ const name=(j===layerCount-1)?'Black':'G'+j;
+ const ph=phase===0?'outline only':phase===1?'fill + outline':'outline removed';
+ return name+' - '+ph;
+}
+
+function pdfPageContent(index,count,step){
+ const layerCount=S.steps-1,totalSteps=1+layerCount*3;
+ const title=stepTitleAscii(step);
+ /* image layout: two panes side by side */
+ const boxTop=486,boxBottom=56,boxW=373,leftX=36,rightX=433;
+ const boxH=boxTop-boxBottom;
+ const ar=W/H;
+ let dh=boxH,dw=dh*ar;
+ if(dw>boxW){dw=boxW;dh=dw/ar;}
+ const x1=leftX+(boxW-dw)/2,x2=rightX+(boxW-dw)/2,y=boxBottom+(boxH-dh)/2;
+ const f=n=>Math.round(n*100)/100;
+ const L=[];
+ L.push('q');
+ L.push('0.145 0.137 0.122 rg');
+ L.push(`BT /F2 22 Tf 1 0 0 1 36 545 Tm (${pdfEsc('Squint')}) Tj ET`);
+ L.push('0.47 0.45 0.40 rg');
+ L.push(`BT /F1 10 Tf 1 0 0 1 36 527 Tm (${pdfEsc('Progressive value study - one page per step')}) Tj ET`);
+ L.push('0.86 0.84 0.79 RG 0.8 w');
+ L.push('36 514 m 806 514 l S');
+ L.push('0.145 0.137 0.122 rg');
+ L.push(`BT /F2 10 Tf 1 0 0 1 36 498 Tm (${pdfEsc('Reference + step overlay')}) Tj ET`);
+ L.push(`BT /F2 10 Tf 1 0 0 1 433 498 Tm (${pdfEsc('Progressive step - '+title)}) Tj ET`);
+ L.push('0.86 0.84 0.79 RG 0.7 w');
+ L.push(`${f(x1)} ${f(y)} ${f(dw)} ${f(dh)} re S`);
+ L.push(`${f(x2)} ${f(y)} ${f(dw)} ${f(dh)} re S`);
+ L.push(`q ${f(dw)} 0 0 ${f(dh)} ${f(x1)} ${f(y)} cm /Im0 Do Q`);
+ L.push(`q ${f(dw)} 0 0 ${f(dh)} ${f(x2)} ${f(y)} cm /Im1 Do Q`);
+ L.push('0.47 0.45 0.40 rg');
+ const foot=`Page ${index+1} of ${count}   -   Step ${step} of ${totalSteps-1}   -   ${title}`;
+ L.push(`BT /F1 9 Tf 1 0 0 1 36 28 Tm (${pdfEsc(foot)}) Tj ET`);
+ L.push('Q');
+ return L.join('\n')+'\n';
+}
+
+function buildPdf(pages){
+ const enc=new TextEncoder();
+ const chunks=[];let size=0;
+ const push=d=>{const b=(typeof d==='string')?enc.encode(d):d;chunks.push(b);size+=b.length;};
+ const offsets=[0];
+ const mark=id=>{offsets[id]=size;};
+ push('%PDF-1.4\n');
+ push(new Uint8Array([0x25,0xE2,0xE3,0xCF,0xD3,0x0A]));  /* binary marker comment */
+ const n=pages.length;
+ const F1=3+n*4,F2=F1+1;
+ const kids=pages.map((_,i)=>(3+i*4)+' 0 R').join(' ');
+ mark(1);push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+ mark(2);push(`2 0 obj\n<< /Type /Pages /Count ${n} /Kids [${kids}] >>\nendobj\n`);
+ pages.forEach((pg,i)=>{
+  const pid=3+i*4,cid=pid+1,i0=pid+2,i1=pid+3;
+  const content=enc.encode(pdfPageContent(i,n,pg.step));
+  mark(cid);
+  push(`${cid} 0 obj\n<< /Length ${content.length} >>\nstream\n`);
+  push(content);
+  push('\nendstream\nendobj\n');
+  [[i0,pg.left],[i1,pg.right]].forEach(([id,img])=>{
+   mark(id);
+   push(`${id} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${img.w} /Height ${img.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${img.bytes.length} >>\nstream\n`);
+   push(img.bytes);
+   push('\nendstream\nendobj\n');
+  });
+  mark(pid);
+  push(`${pid} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_W} ${PDF_H}] /Resources << /XObject << /Im0 ${i0} 0 R /Im1 ${i1} 0 R >> /Font << /F1 ${F1} 0 R /F2 ${F2} 0 R >> >> /Contents ${cid} 0 R >>\nendobj\n`);
+ });
+ mark(F1);push(`${F1} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n`);
+ mark(F2);push(`${F2} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n`);
+ const xrefPos=size;
+ let x='xref\n0 '+(F2+1)+'\n0000000000 65535 f \n';
+ for(let i=1;i<=F2;i++)x+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
+ push(x);
+ push(`trailer\n<< /Size ${F2+1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`);
+ const out=new Uint8Array(size);let p=0;
+ for(const c of chunks){out.set(c,p);p+=c.length;}
+ return new Blob([out],{type:'application/pdf'});
+}
+
+let pdfBusy=false;
+async function exportPdf(btnId){
+ if(!layers.length||pdfBusy)return;
+ pdfBusy=true;
+ const btn=$(btnId),old=btn.textContent;
+ btn.disabled=true;btn.textContent='Building PDF…';
+ try{
+  const refHref=S.studyGray?srcDataUrlGray:srcDataUrlColor;
+  const refImg=await loadImg(refHref);
+  const layerCount=S.steps-1,totalSteps=1+layerCount*3;
+  const scale=clamp(820/W,0.5,4);
+  const cw=Math.max(1,Math.round(W*scale)),ch=Math.max(1,Math.round(H*scale));
+  const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+  const ctx=cv.getContext('2d');
+  const pages=[];
+  for(let step=0;step<totalSteps;step++){
+   ctx.setTransform(1,0,0,1,0,0);
+   ctx.clearRect(0,0,cw,ch);
+   drawStudyPane(ctx,step,true,refImg,scale);
+   const left={bytes:dataUrlBytes(cv.toDataURL('image/jpeg',0.85)),w:cw,h:ch};
+   ctx.setTransform(1,0,0,1,0,0);
+   ctx.clearRect(0,0,cw,ch);
+   drawStudyPane(ctx,step,false,refImg,scale);
+   const right={bytes:dataUrlBytes(cv.toDataURL('image/jpeg',0.85)),w:cw,h:ch};
+   pages.push({left,right,step});
+   if(step%2===1)await new Promise(r=>setTimeout(r,0));
+  }
+  const blob=buildPdf(pages);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='squint-value-study-pages.pdf';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+  btn.textContent='Exported ✓';
+  setTimeout(()=>{btn.textContent=old;},1800);
+ }catch(err){
+  console.error(err);
+  alert('PDF export failed: '+err.message);
+  btn.textContent=old;
+ }finally{
+  pdfBusy=false;btn.disabled=false;
+ }
+}
+
+/* ---------- wiring ---------- */
+function curShape(){const p=Math.min(S.pass,S.steps-1);return S.selKey&&layers[p-1]?layers[p-1].find(a=>a.key===S.selKey):null}
+function panel(){const q=curShape(),p=Math.min(S.pass,S.steps-1),active=S.mode==='poly'&&S.viewMode==='preview';
+ $('selectedTools').style.display=active?'grid':'none';
+ const ids=['sMinus10','sMinus','shapeSides','sPlus','sPlus10','sReset'];ids.forEach(id=>$(id).disabled=!q);
+ $('sClear').disabled=!Object.keys(S.over).length;
+ if(q){const custom=S.over[S.selKey]!==undefined;$('selTxt').textContent=nm(p)+' region · '+(q.length/2)+' edges currently rendered · worst error '+errAt(getCurve(S.selKey),q.length/2).toFixed(1)+' px'+(custom?' · custom edge limit':' · using default limit');$('shapeSides').value=S.over[S.selKey]??Math.max(S.maxSides,q.length/2)}
+ else{$('selTxt').textContent='Click a polygon in the preview (on the current pass) to edit its edge limit.';$('shapeSides').value=S.maxSides}}
+const bump=d=>{const q=curShape();if(!q)return;const base=S.over[S.selKey]??Math.max(S.maxSides,q.length/2);S.over[S.selKey]=clamp(base+d,4,1000);$('shapeSides').value=S.over[S.selKey];go()};
+const setShapeLimit=()=>{if(!curShape())return;const v=Number($('shapeSides').value);if(!Number.isFinite(v)){panel();return}S.over[S.selKey]=clamp(Math.round(v),4,1000);$('shapeSides').value=S.over[S.selKey];go()};
+$('sPlus').onclick=()=>bump(1);$('sMinus').onclick=()=>bump(-1);$('sPlus10').onclick=()=>bump(10);$('sMinus10').onclick=()=>bump(-10);$('shapeSides').onchange=setShapeLimit;
+$('sReset').onclick=()=>{if(!S.selKey)return;delete S.over[S.selKey];go()};
+$('sClear').onclick=()=>{S.over={};go()};
+$('stage').onclick=e=>{const t=e.target.closest&&e.target.closest('[data-k]');S.selKey=t?t.getAttribute('data-k'):null;render()};
+function labels(){$('vSteps').textContent=S.steps;$('vG').textContent=S.gamma.toFixed(2);$('vFr').textContent=S.fr;$('vMin').textContent=S.minA;$('vSm').textContent=S.smooth;$('vSeg').textContent=S.seg}
+function go(refilter){labels();clearTimeout(timer);timer=setTimeout(()=>process(refilter),80)}
+$('steps').oninput=e=>{S.steps=+e.target.value;manual={};S.over={};S.selKey=null;sel=Math.min(sel,S.steps-1);S.pass=S.steps-1;S.studyStep=0;go()};
+$('gamma').oninput=e=>{S.gamma=+e.target.value;go()};
+$('ed').oninput=e=>{const j=sel-1,hi=j>0?thr[j-1]-1:254,lo=j<thr.length-1?thr[j+1]+1:1;manual[j]=clamp(+e.target.value,lo,hi);$('edVal').textContent=manual[j];go()};
+$('auto').onclick=()=>{manual={};go()};
+$('mode').onchange=e=>{S.mode=e.target.value;$('ptype').style.display=$('poly-default').style.display=S.mode==='poly'?'block':'none';panel();go()};
+$('maxs').oninput=e=>{S.maxSides=+e.target.value;$('vMs').textContent=S.maxSides;go()};
+$('ptype').onchange=e=>{S.ptype=e.target.value;go()};
+$('filt').onchange=e=>{S.filt=e.target.value;go(true)};
+$('fr').oninput=e=>{S.fr=+e.target.value;go(true)};
+$('minA').oninput=e=>{S.minA=+e.target.value;go()};
+$('smooth').oninput=e=>{S.smooth=+e.target.value;go()};
+$('seg').oninput=e=>{S.seg=+e.target.value;go()};
+$('pass').oninput=e=>{S.pass=+e.target.value;render()};
+['fills','lines','dots','curves'].forEach(id=>$(id).onchange=render);
+let pl=null;$('play').onclick=()=>{if(pl){clearInterval(pl);pl=null;$('play').textContent='▶ Play passes';return}
+ S.pass=0;$('play').textContent='■ Stop';pl=setInterval(()=>{S.pass++;if(S.pass>S.steps-1){clearInterval(pl);pl=null;S.pass=S.steps-1;$('play').textContent='▶ Play passes'}$('pass').value=S.pass;render()},700)};
+
+/* Mode & Value Study controls */
+$('btnModePreview').onclick=()=>{S.viewMode='preview';render()};
+$('btnModeStudy').onclick=()=>{
+ if(pl){clearInterval(pl);pl=null;$('play').textContent='▶ Play passes';}
+ S.viewMode='study';render();
+};
+$('studyPrev').onclick=()=>{S.studyStep=Math.max(0,S.studyStep-1);renderStudy()};
+$('studyNext').onclick=()=>{S.studyStep=Math.min((S.steps-1)*3,S.studyStep+1);renderStudy()};
+$('studySlider').oninput=e=>{S.studyStep=+e.target.value;renderStudy()};
+$('lineOpacity').oninput=e=>{S.lineOpacity=+e.target.value;renderStudy()};
+$('fillOpacity').oninput=e=>{S.fillOpacity=+e.target.value;renderStudy()};
+$('studyGray').onchange=e=>{S.studyGray=e.target.checked;renderStudy()};
+document.addEventListener('keydown',e=>{
+ if(S.viewMode!=='study')return;
+ if(e.target&&['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;
+ if(e.altKey||e.ctrlKey||e.metaKey)return;
+ const maxStep=(S.steps-1)*3;
+ if(e.key==='ArrowRight'){e.preventDefault();S.studyStep=clamp(S.studyStep+1,0,maxStep);renderStudy();}
+ else if(e.key==='ArrowLeft'){e.preventDefault();S.studyStep=clamp(S.studyStep-1,0,maxStep);renderStudy();}
+ else if(e.key==='Home'){e.preventDefault();S.studyStep=0;renderStudy();}
+ else if(e.key==='End'){e.preventDefault();S.studyStep=maxStep;renderStudy();}
+});
+
+$('exportSteps').onclick=()=>exportSteppedSvg('exportSteps');
+$('exportStepsStudy').onclick=()=>exportSteppedSvg('exportStepsStudy');
+$('exportPdf').onclick=()=>exportPdf('exportPdf');
+$('exportPdfStudy').onclick=()=>exportPdf('exportPdfStudy');
+$('copy').onclick=async()=>{const t=svgStr(false),c=$('code');c.value=t;try{await navigator.clipboard.writeText(t);$('copy').textContent='Copied ✓'}catch(e){c.style.display='block';c.select();$('copy').textContent='Copy from box below'}
+ setTimeout(()=>$('copy').textContent='Copy current SVG',2500)};
+$('tol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol};$('refPass').onclick=()=>autoRefine(false);$('refAll').onclick=()=>autoRefine(true);
+labels();sample();
+</script></body></html>
