@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Squint — Value Study</title>
+<meta name="description" content="Squint turns a photo into a progressive greyscale value study, then refines each blocking polygon to the fewest edges that keep the likeness.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2376b234'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="app">
+ <main class="workspace">
+  <header class="workspace-head">
+   <div class="workspace-title">
+    <span class="eyebrow">LIVE CANVAS · VALUE STUDY</span>
+    <h2>Squint</h2>
+    <p>Click a polygon on the live canvas to refine it, and step through the values beside it.</p>
+   </div>
+   <div class="head-actions"><span class="pill" id="vPass">STEP 0 / 12</span></div>
+  </header>
+
+  <!-- Live canvas + value study, side by side -->
+  <div class="study-stage">
+   <div class="study-pane">
+    <div class="pane-head"><span>Live canvas</span><span class="pane-sub" id="liveBadge">Line 90% · Fill 25%</span></div>
+    <div class="pane-box" id="livePane"></div>
+   </div>
+   <div class="study-pane">
+    <div class="pane-head"><span>Value study</span><span class="pane-sub" id="stepStageSub">Blank white base</span></div>
+    <div class="pane-box" id="studyPane"></div>
+   </div>
+  </div>
+
+  <!-- Polygon editor (blocking polygons only) -->
+  <section class="selected-tools" id="selectedTools" style="display:none">
+   <div class="selected-copy"><span class="eyebrow">POLYGON EDITOR</span><strong>Selected polygon</strong><div class="note" id="selTxt">Click a shape on the live canvas to edit its edges.</div><div class="note">Use ±10 or type a new limit up to 1,000. The available contour detail sets the practical maximum.</div></div>
+   <div class="edge-tools"><span class="edge-label">Edge limit</span><button id="sMinus10" title="Reduce the edge limit by 10">−10</button><button id="sMinus" title="Reduce the edge limit by 1">−1</button><input id="shapeSides" type="number" min="4" max="1000" step="1" value="7" aria-label="Selected polygon edge limit"><button id="sPlus" title="Increase the edge limit by 1">+1</button><button id="sPlus10" title="Increase the edge limit by 10">+10</button></div>
+   <div class="selected-actions"><button id="sReset">Reset selected polygon</button><button id="sClear">Clear all custom limits</button></div>
+  </section>
+
+  <!-- Shared step bar -->
+  <section class="workbar">
+   <div class="workbar-main">
+    <div class="step-nav">
+     <button id="studyPrev" title="Previous step (Left Arrow)" disabled>← Prev</button>
+     <button id="studyNext" title="Next step (Right Arrow)">Next →</button>
+     <button id="play" title="Play through the value steps">▶ Play</button>
+    </div>
+    <div class="step-scrubber">
+     <input type="range" id="studySlider" min="0" max="12" value="0" aria-label="Progressive value step">
+     <div class="step-info"><strong id="studyStepTitle">PURE WHITE</strong><span id="studyStepCount">0 / 12</span></div>
+    </div>
+    <div class="workbar-opts">
+     <label class="opacity-ctrl" title="Outline opacity on the live canvas"><span>Line</span><input type="range" id="lineOpacity" min="0" max="1" step="0.05" value="0.9"></label>
+     <label class="opacity-ctrl" title="Value fill opacity on the live canvas"><span>Fill</span><input type="range" id="fillOpacity" min="0" max="1" step="0.05" value="0.25"></label>
+     <label class="chk" title="Show the reference image in greyscale"><input type="checkbox" id="studyGray">Grey ref</label>
+    </div>
+   </div>
+   <div class="workbar-sub">
+    <div class="view-toggles">
+     <label class="chk" title="Show value fills on the live canvas"><input type="checkbox" id="fills" checked>Fills</label>
+     <label class="chk" title="Show shape outlines on the live canvas"><input type="checkbox" id="lines">Outlines</label>
+     <label class="chk" title="Show polygon vertices for the current level"><input type="checkbox" id="dots">Split dots</label>
+     <label class="chk" title="Render shapes as smooth curves instead of straight polygon edges"><input type="checkbox" id="curves">Curved paths</label>
+    </div>
+    <div class="export-group">
+     <button id="copy" class="copy-btn" title="Copy the current value-study step as SVG">Copy step SVG</button>
+     <button id="exportSteps" class="copy-btn" title="Download a self-contained SVG with its own step controls">Export stepped SVG</button>
+     <button id="exportPdf" class="copy-btn pri" title="Download a landscape PDF, one page per step">Export PDF</button>
+    </div>
+   </div>
+  </section>
+
+  <textarea id="code" readonly aria-label="SVG source code"></textarea>
+ </main>
+
+ <aside class="sidebar">
+  <div class="card"><h2>Source image</h2>
+   <div class="row source-row">
+    <button id="sample" class="pri">Load sample</button>
+    <label class="file-btn" title="Choose an image from your computer">
+     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+     <span>Choose image</span>
+     <input type="file" id="file" accept="image/*">
+    </label>
+   </div>
+   <div class="note" id="fileName">No image selected · PNG, JPG, WebP</div>
+   <div class="note" id="dim"></div></div>
+
+  <div class="card"><h2>Grey steps <span class="pill" id="vSteps"></span></h2>
+   <input type="range" id="steps" min="2" max="9" value="5">
+   <div class="note">The highest step is always black. Select a grey below to adjust where it begins.</div>
+   <div class="chips" id="chips"></div>
+   <label><span id="edLbl">Threshold</span><span id="edVal"></span></label>
+   <input type="range" id="ed" min="1" max="254">
+   <label><span>Threshold curve γ</span><span id="vG"></span></label>
+   <input type="range" id="gamma" min="0.3" max="2.5" step="0.05" value="0.8">
+   <div class="note">γ below 1 pushes thresholds up (darks grow); γ above 1 pulls them down (lights grow). Manual edits override the curve.</div>
+   <div class="row"><button id="auto">Reset thresholds</button></div>
+   <div class="note" id="thrTxt"></div></div>
+
+  <div class="card"><h2>Shape quality</h2>
+   <label><span>Shape style</span></label>
+   <select id="mode"><option value="curve">Smooth curves (tolerance)</option><option value="poly">Blocking polygons (split worst edge)</option></select>
+   <select id="ptype" style="margin-top:7px;display:none"><option value="in">Inscribed (vertices on the shape)</option><option value="out" selected>Containing (edges outside the shape)</option></select>
+   <div class="poly-default" id="poly-default" style="display:none"><label><span>Default edge limit per shape</span><span id="vMs">250</span></label><input type="range" id="maxs" min="4" max="250" value="250">
+    <div class="note">Every polygon starts at this limit. Auto-refine resets it to 4 edges so each shape grows only as far as it needs to.</div></div>
+   <div class="note">Blocking starts with a rectangle around each shape, then adds the point farthest from an edge until the edge limit or segment budget is reached.</div>
+   <label><span>Pre-filter</span></label>
+   <select id="filt"><option value="kuwahara">Kuwahara (painterly)</option><option value="bilateral">Bilateral (edge-preserving)</option><option value="gauss">Gaussian</option><option value="none">None</option></select>
+   <label><span>Filter strength</span><span id="vFr"></span></label><input type="range" id="fr" min="1" max="6" value="3">
+   <label><span>Ignore shapes smaller than (px²)</span><span id="vMin"></span></label><input type="range" id="minA" min="0" max="600" value="60">
+   <label><span>Contour smoothing</span><span id="vSm"></span></label><input type="range" id="smooth" min="0" max="8" step="0.5" value="2.5">
+   <label><span>Total line-segment budget</span><span id="vSeg"></span></label><input type="range" id="seg" min="100" max="6000" step="50" value="1500">
+   <div class="note" id="segUsed"></div></div>
+
+  <div class="card"><h2>Auto-refine edges</h2>
+   <label><span>Worst-point tolerance (px)</span><span id="vTol">3</span></label><input type="range" id="tol" min="0.5" max="10" step="0.5" value="3">
+   <label><span>Edge steps, coarse to fine</span><input type="text" id="sched" value="5,3,1" aria-label="Edge step sizes" style="width:90px;text-align:center"></label>
+   <div class="row"><button id="refPass" class="pri">Refine current level</button><button id="refAll">Refine all levels</button></div>
+   <div class="note" id="refTxt">Blocking polygons only. Refining starts every shape at 4 edges, then adds edges (coarse steps first, then fine) until no contour point is farther than the tolerance from its polygon.</div>
+  </div>
+ </aside>
+
+</div>
+<script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
