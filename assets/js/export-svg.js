@@ -1,5 +1,5 @@
 /* Standalone, interactive stepped-SVG export. */
-import { $, S, doc, curvesEnabled, shade } from './state.js';
+import { $, S, doc, curvesEnabled, shade, CONTOUR } from './state.js';
 import { dPath } from './geometry.js';
 
 export function steppedSvgStr() {
@@ -33,7 +33,7 @@ export function steppedSvgStr() {
     const d = (doc.layers[j] || []).map(q => dPath(q, cv)).join('');
     const gray = shade(j + 1);
     parts.push(`<g id="fill-${j}" visibility="visible"><path d="${d}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
-    parts.push(`<g id="outline-${j}" visibility="hidden"><path d="${d}" fill="none" fill-rule="evenodd" stroke="#2b2b2b" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
+    parts.push(`<g id="outline-${j}" visibility="hidden"><path d="${d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
   }
   parts.push('</g>');
   parts.push('<script><![CDATA[' + embeddedScript(layerCount, totalSteps, sliderX, sliderW) + ']]>');

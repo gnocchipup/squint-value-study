@@ -5,8 +5,10 @@
 export const $ = id => document.getElementById(id);
 export const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
-/* Outline colour on top of photographs (lichess blue). */
+/* Outline colour on top of photographs (selection + vertex dots). */
 export const OVERLAY = '#3692e7';
+/* Value-study contour colour, mirrored on the live canvas. */
+export const CONTOUR = '#2b2b2b';
 
 /* User settings. */
 export const S = {
@@ -29,7 +31,6 @@ export const S = {
   tol: 3,
   /* live-canvas render options */
   fills: true,
-  outlines: false,
   dots: false,
   curves: false
 };

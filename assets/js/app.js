@@ -173,7 +173,6 @@ $('livePane').onclick = e => {
 
 /* ---------- live-canvas view options ---------- */
 $('fills').onchange = e => { S.fills = e.target.checked; render(); };
-$('lines').onchange = e => { S.outlines = e.target.checked; render(); };
 $('dots').onchange = e => { S.dots = e.target.checked; render(); };
 $('curves').onchange = e => { S.curves = e.target.checked; render(); };
 $('lineOpacity').oninput = e => { S.lineOpacity = +e.target.value; render(); };
@@ -224,7 +223,6 @@ $('file').addEventListener('change', async e => {
 
 /* ---------- init ---------- */
 $('fills').checked = S.fills;
-$('lines').checked = S.outlines;
 $('dots').checked = S.dots;
 $('curves').checked = S.curves;
 $('studyGray').checked = S.studyGray;

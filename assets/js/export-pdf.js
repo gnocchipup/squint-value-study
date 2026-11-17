@@ -1,5 +1,5 @@
 /* Landscape PDF export: one page per progressive step, reference + study. */
-import { $, S, doc, clamp, OVERLAY } from './state.js';
+import { $, S, doc, clamp, CONTOUR } from './state.js';
 import { stepParts } from './render.js';
 
 const PDF_W = 842;
@@ -50,12 +50,12 @@ function drawStudyPane(ctx, step, isOverlay, refImg, scale) {
     ctx.lineWidth = 2.4;
     for (const q of outlines) ctx.stroke(new Path2D(q.d));
     ctx.globalAlpha = S.lineOpacity;
-    ctx.strokeStyle = OVERLAY;
+    ctx.strokeStyle = CONTOUR;
     ctx.lineWidth = 1.35;
     for (const q of outlines) ctx.stroke(new Path2D(q.d));
     ctx.globalAlpha = 1;
   } else {
-    ctx.strokeStyle = '#2b2b2b';
+    ctx.strokeStyle = CONTOUR;
     ctx.lineWidth = 1.35;
     for (const q of outlines) ctx.stroke(new Path2D(q.d));
   }

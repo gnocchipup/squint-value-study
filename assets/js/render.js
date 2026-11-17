@@ -1,7 +1,7 @@
 /* Rendering for the merged live-canvas / value-study workspace. */
 import {
   $, S, doc, clamp, layerCount, totalSteps, activeLayer, activePass,
-  curvesEnabled, shade, levelName, OVERLAY
+  curvesEnabled, shade, levelName, OVERLAY, CONTOUR
 } from './state.js';
 import { dPath, area } from './geometry.js';
 import { errAt, getCurve } from './polygons.js';
@@ -35,19 +35,14 @@ export function stepParts(step) {
   return { fills, outlines };
 }
 
-export function buildSteppedParts(step, isOverlay) {
+export function buildSteppedParts(step) {
   const { fills, outlines } = stepParts(step);
   let f = '';
   let o = '';
   for (const q of fills)
     f += `<path d="${q.d}" fill="rgb(${q.gray},${q.gray},${q.gray})" fill-rule="evenodd" stroke="none"/>`;
-  for (const q of outlines) {
-    const halo = isOverlay
-      ? `<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>`
-      : '';
-    const color = isOverlay ? OVERLAY : '#2b2b2b';
-    o += `${halo}<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="${color}" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>`;
-  }
+  for (const q of outlines)
+    o += `<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>`;
   return { fills: f, outlines: o };
 }
 
@@ -67,11 +62,13 @@ export function liveSvgStr(interactive) {
       s += `<path d="${q.d}" fill="rgb(${q.gray},${q.gray},${q.gray})" fill-rule="evenodd" stroke="none"/>`;
     s += '</g>';
   }
-  if (S.outlines && outlines.length) {
+  /* The reference contour mirrors the study: it exists only while the
+     current phase shows an outline, and the Line slider sets its opacity. */
+  if (S.lineOpacity > 0 && outlines.length) {
     s += `<g opacity="${S.lineOpacity}">`;
     for (const q of outlines) {
       s += `<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>`;
-      s += `<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="${OVERLAY}" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>`;
+      s += `<path d="${q.d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>`;
     }
     s += '</g>';
   }
@@ -86,7 +83,7 @@ export function liveSvgStr(interactive) {
   if (interactive && S.mode === 'poly') {
     for (const q of list.slice().sort((a, b) => area(b) - area(a))) {
       const on = q.key === S.selKey;
-      s += `<path data-k="${q.key}" d="${dPath(q, cv)}" fill="none" stroke="${on ? OVERLAY : 'rgba(54,146,231,.35)'}" stroke-width="${on ? 2.5 : 1}" stroke-linejoin="round" style="cursor:pointer;pointer-events:all"/>`;
+      s += `<path class="hit${on ? ' sel' : ''}" data-k="${q.key}" d="${dPath(q, cv)}"/>`;
     }
   }
   return s + '</svg>';
@@ -94,7 +91,7 @@ export function liveSvgStr(interactive) {
 
 /* Right pane: the progressive value study on a white base. */
 export function studySvgStr() {
-  const parts = buildSteppedParts(S.studyStep, false);
+  const parts = buildSteppedParts(S.studyStep);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${doc.W} ${doc.H}" width="${doc.W}" height="${doc.H}" role="img" aria-label="Progressive value study">
    <rect width="${doc.W}" height="${doc.H}" fill="#ffffff"/>
    ${parts.fills}

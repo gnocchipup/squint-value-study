@@ -8,7 +8,7 @@ Static page with ES modules. No framework, no bundler.
 index.html
 assets/css/main.css
 assets/js/
-  state.js      S (settings), doc (image/derived data), helpers, OVERLAY colour
+  state.js      S (settings), doc (image/derived data), helpers, OVERLAY/CONTOUR colours
   image.js      sample image, file decode, luminance + grey data URLs
   filters.js    gauss / bilateral / kuwahara, prefilter()
   geometry.js   cleanup, trace (marching squares), smoothL, rdp, dPath, far
@@ -57,8 +57,9 @@ assets/js/
 
 ## Rendering
 
-- `liveSvgStr(true)` = source image + fills/outlines for the step + vertex dots + clickable
-  polygons for the active level (polygon mode only).
+- `liveSvgStr(true)` = source image + step fills + the same contour as the study (white halo,
+  dark line, `lineOpacity`) + vertex dots + clickable hit paths for the active level (polygon mode
+  only). Hit paths are transparent until hovered/selected.
 - `studySvgStr()` = white rect + step fills + dark contours.
 - `render()` clamps the step, updates slider/nav, rewrites both panes, then updates the editor.
 

@@ -22,8 +22,9 @@ a polygonal block that can be drawn or painted with the fewest possible edges.
 
 ## UX rules
 
-- Live-canvas toggles (fills, outlines, split dots, curved paths) never change the value study's
-  progression.
+- Live-canvas toggles (fills, split dots, curved paths) never change the value study's
+  progression. The reference contour mirrors the study's outline phase and is faded by the Line
+  slider only.
 - Selecting a polygon is level-specific; changing levels may leave the editor idle until a shape
   on the new level is clicked.
 - Auto-refine is destructive on purpose: it clears per-shape limits and restarts from 4 edges.

@@ -24,7 +24,9 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
 - **Pre-filters** — Kuwahara, bilateral, Gaussian or none, ahead of thresholding.
 - **Exports** — a self-contained interactive stepped SVG, a landscape PDF with one page per step,
   or a copy of the current step as SVG.
-- **Live-canvas display options** — fills, outlines, split dots and curved paths.
+- **Live-canvas display options** — fills, split dots and curved paths. The reference contour is
+  drawn from the same data as the value study, so it appears in the outline phases, disappears when
+  the study removes the outline, and fades with the Line slider (0 hides it).
 - **Lichess-inspired light palette** (neutral greys + a single green accent, one shade lighter
   than lichess) with a matching dark theme.
 - **Keyboard-first stepping** — arrow keys, Home/End and PageUp/PageDown.
@@ -58,22 +60,25 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
    so refinement grows each one from the minimum to the least number of edges that meets the
    tolerance.
 7. Step through the study with **← Prev / Next →**, the slider, **Play**, or the arrow keys.
-   Each level has three phases: *outline only* → *fill + outline* → *outline removed*.
+   Each level has three phases: *outline only* → *fill + outline* → *outline removed*. The live
+   canvas mirrors those phases, and the **Line** slider controls the reference contour's opacity.
 8. Export with **Export stepped SVG**, **Export PDF**, or **Copy step SVG**.
 
 ### Defaults
 
 | Setting | Default |
 | --- | --- |
-| Fills / Outlines | Fills on, outlines off |
+| Fills | On |
 | Split dots / Curved paths | Off |
+| Reference contour | Mirrors the study phase; Line slider sets opacity (0 hides) |
 | Shape style | Smooth curves |
 | Polygon type | Containing (edges outside the shape) |
 | Default edge limit per shape | 250 |
 | Auto-refine starting limit | 4 edges, then coarse → fine steps |
 
-> Live-canvas toggles affect the left pane only. The value study always renders its full
-> progression (fills and contours) so the exercise stays readable.
+> The live canvas mirrors the study's current phase: fills appear as the study fills levels,
+> and the contour only exists while the study shows an outline. Use the **Line** slider to fade
+> the reference contour; **Split dots** shows the active level's polygon vertices.
 
 ## Deploying to GitHub Pages
 
