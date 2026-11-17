@@ -13,7 +13,8 @@ preserve the shape.
   value study on white.
 - One shared step scrubber drives both panes; each value level has three phases (outline only,
   fill + outline, outline removed).
-- Blocking polygons with per-shape edge limits and an auto-refine pass that starts at 4 edges.
+- Blocking polygons with per-shape edge limits, plus auto-refine for all levels or just the
+  selected shape, always starting at 4 edges.
 - Exports: self-contained stepped SVG, multi-page PDF, copy current step SVG.
 - No backend, no uploads, no build step, no runtime dependencies.
 

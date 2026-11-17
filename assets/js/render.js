@@ -170,6 +170,7 @@ export function panel() {
   const q = curShape();
   const active = S.mode === 'poly';
   $('selectedTools').style.display = active ? 'grid' : 'none';
+  $('refPass').disabled = !(active && q);
   ['sMinus10', 'sMinus', 'shapeSides', 'sPlus', 'sPlus10', 'sReset'].forEach(id => {
     $(id).disabled = !q;
   });

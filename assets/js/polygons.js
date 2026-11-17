@@ -1,5 +1,5 @@
 /* Blocking-polygon construction and the auto-refine pass. */
-import { S, doc, clamp, activeLayer, layerCount } from './state.js';
+import { S, doc, clamp, layerCount } from './state.js';
 import { far } from './geometry.js';
 
 /* Build one closed polygon per traced contour, growing each from a
@@ -181,15 +181,13 @@ export function stagedLimit(E, L0, tol, steps) {
   return { limit: Math.min(L, 1000), trail };
 }
 
-/* Refine the active value level, or every level. Callers reset the
-   default limit to 4 first so each shape grows from the minimum. */
-export function refinePasses(all, schedule) {
+/* Refine every shape on every level. Callers reset the default limit to 4
+   first so each shape grows from the minimum. */
+export function refinePasses(schedule) {
   const steps = schedule.length ? schedule : [5, 3, 1];
-  const lo = all ? 0 : activeLayer();
-  const hi = all ? layerCount() - 1 : activeLayer();
   let count = 0;
   let added = 0;
-  for (let j = lo; j <= hi; j++)
+  for (let j = 0; j < layerCount(); j++)
     for (const q of doc.layers[j] || []) {
       const E = getCurve(q.key);
       if (!E) continue;
@@ -201,5 +199,17 @@ export function refinePasses(all, schedule) {
         added += r.limit - L0;
       }
     }
-  return { count, added, steps, all };
+  return { count, added, steps };
+}
+
+/* Refine one shape from the minimum of 4 edges. Only that shape's limit is
+   written, so a full pass can be tuned afterwards shape by shape. */
+export function refineShape(q, schedule) {
+  const steps = schedule.length ? schedule : [5, 3, 1];
+  const E = getCurve(q.key);
+  if (!E) return null;
+  const before = S.over[q.key] ?? q.length / 2;
+  const r = stagedLimit(E, 4, S.tol, steps);
+  S.over[q.key] = r.limit;
+  return { before, limit: r.limit, added: r.limit - before, err: errAt(E, r.limit), steps };
 }

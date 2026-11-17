@@ -17,7 +17,9 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
   edge until a per-shape edge limit or the global segment budget is reached.
 - **Auto-refine edges** — starts every shape at the minimum of 4 edges, then adds edges in
   coarse-to-fine steps (`5, 3, 1`) until the worst contour point is inside the tolerance. The
-  result is the smallest workable polygon per shape.
+  result is the smallest workable polygon per shape. Run it on **all levels** first, then select
+  individual shapes and refine **just that shape** at a tighter tolerance — other shapes keep
+  their limits.
 - **Per-shape edge limits** — click any polygon on the live canvas, then nudge its limit by ±1 or
   ±10, type an exact value, reset it, or clear every custom limit.
 - **Tunable value steps** — 2–9 steps, manual thresholds per grey, and a threshold curve (γ).
@@ -56,9 +58,11 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 4. For blocking polygons, choose **Inscribed** or **Containing** (Containing is the default) and a
    default edge limit.
 5. Click a shape on the **live canvas** to select it, then tune its edge limit in the polygon editor.
-6. Click **Refine current level** or **Refine all levels**. Every shape is reset to 4 edges first,
-   so refinement grows each one from the minimum to the least number of edges that meets the
-   tolerance.
+6. Click **Refine all levels** for a full pass. Every shape is reset to 4 edges first, so
+   refinement grows each one from the minimum to the least number of edges that meets the
+   tolerance. Then select individual shapes on the live canvas, lower the tolerance (for example
+   `1.5` or `2`), and click **Refine current shape** to add detail to that shape only — every
+   other shape keeps the limit the full pass gave it.
 7. Step through the study with **← Prev / Next →**, the slider, **Play**, or the arrow keys.
    Each level has three phases: *outline only* → *fill + outline* → *outline removed*. The live
    canvas mirrors those phases, and the **Line** slider controls the reference contour's opacity.
@@ -74,7 +78,7 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 | Shape style | Smooth curves |
 | Polygon type | Containing (edges outside the shape) |
 | Default edge limit per shape | 250 |
-| Auto-refine starting limit | 4 edges, then coarse → fine steps |
+| Auto-refine starting limit | 4 edges, then coarse → fine steps (all levels, or the selected shape) |
 
 > The live canvas mirrors the study's current phase: fills appear as the study fills levels,
 > and the blue contour only exists while the study shows an outline. Use the **Line** slider to

@@ -7,6 +7,11 @@ former workspace modes (preview and value study) are merged.
 
 ## Recent changes (this session)
 
+- Replaced “Refine current level” with **Refine current shape**: it re-refines only the polygon
+  selected on the live canvas (from 4 edges up to the tolerance) and writes only that shape's
+  limit. “Refine all levels” remains the full reset pass. The button is disabled until a polygon
+  is selected and its message reports the shape's edge change and that other shapes kept their
+  limits.
 - Merged Preview and Value Study into one always-split workspace. The left pane is the live
   canvas (source + current step overlay, clickable polygons); the right pane is the progressive
   study. A single step slider/nav/play controls both.
@@ -24,7 +29,8 @@ former workspace modes (preview and value study) are merged.
   Refine all levels) share one fixed 36 px height. The file-picker label resets the global label
   margin so it aligns exactly with the buttons, and uses the standard button font size.
 - Blocking polygons default to Containing and a 250-edge default limit.
-- Auto-refine now resets `maxSides` to 4 and clears custom limits before growing shapes.
+- Auto-refine now resets `maxSides` to 4 and clears custom limits before growing shapes (all-levels
+  pass only; the per-shape pass leaves the default and other limits alone).
 - Split the app into `index.html`, `assets/css/main.css` and ten ES modules. Old
   `squint-value-study.html` deleted.
 - Added `README.md` and `.gitignore`; commit made with GitHub Desktop's bundled git.
@@ -37,6 +43,8 @@ former workspace modes (preview and value study) are merged.
 
 ## Decisions
 
+- Auto-refine workflow: one full pass at a loose tolerance, then select individual shapes for
+  tighter tolerances. Per-shape refinement is intentionally non-destructive to other shapes.
 - Editing level is derived from the study step (`activeLayer`), not a separate pass control.
 - The reference contour is generated from the same `stepParts` data as the study, so it appears
   only in the outline phases; the Line slider is its only visibility control.

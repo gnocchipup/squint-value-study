@@ -27,4 +27,6 @@ a polygonal block that can be drawn or painted with the fewest possible edges.
   slider only.
 - Selecting a polygon is level-specific; changing levels may leave the editor idle until a shape
   on the new level is clicked.
-- Auto-refine is destructive on purpose: it clears per-shape limits and restarts from 4 edges.
+- Auto-refine has two scopes. **Refine all levels** is destructive on purpose: it clears per-shape
+  limits and restarts every shape from 4 edges. **Refine current shape** re-refines only the
+  polygon selected on the live canvas and leaves every other shape's limit alone.

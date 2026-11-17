@@ -3,7 +3,7 @@ import { $, S, doc, clamp, totalSteps, activePass, levelName } from './state.js'
 import { loadCanvas, sampleImage, readFile } from './image.js';
 import { processImage } from './pipeline.js';
 import { render, labels, curShape, studySvgStr } from './render.js';
-import { refinePasses } from './polygons.js';
+import { refinePasses, refineShape } from './polygons.js';
 import { exportSteppedSvg } from './export-svg.js';
 import { exportPdf } from './export-pdf.js';
 
@@ -100,13 +100,20 @@ $('seg').oninput = e => { S.seg = +e.target.value; go(); };
 $('tol').oninput = e => { S.tol = +e.target.value; $('vTol').textContent = S.tol; };
 
 /* ---------- auto-refine ---------- */
-function handleRefine(all) {
+const readSchedule = () =>
+  ($('sched').value || '')
+    .split(/[ ,]+/)
+    .map(Number)
+    .filter(v => v >= 1)
+    .map(Math.round);
+
+function handleRefineAll() {
   if (S.mode !== 'poly') {
     alert('Set Shape style to Blocking polygons first.');
     return;
   }
-  /* Start from the minimum edge count so the result is the smallest
-     workable polygon, then grow each shape only as far as needed. */
+  /* Full pass: reset every shape to the minimum edge count so the result
+     is the smallest workable polygon per shape. */
   S.maxSides = 4;
   S.over = {};
   S.selKey = null;
@@ -114,20 +121,43 @@ function handleRefine(all) {
   $('vMs').textContent = '4';
   processImage(false);
 
-  const schedule = ($('sched').value || '')
-    .split(/[ ,]+/)
-    .map(Number)
-    .filter(v => v >= 1)
-    .map(Math.round);
-  const res = refinePasses(all, schedule);
-  const scope = res.all ? 'all levels' : levelName(activePass()) + ' level';
+  const res = refinePasses(readSchedule());
   $('refTxt').textContent = res.count
-    ? `${res.count} shapes refined · +${res.added} edges · each started at 4 edges, worst point now within ${S.tol} px (steps +${res.steps.join(' → +')})`
-    : `Every shape on ${scope} is already within ${S.tol} px at 4 edges.`;
+    ? `${res.count} shapes refined on every level · +${res.added} edges · each started at 4 edges, worst point now within ${S.tol} px (steps +${res.steps.join(' → +')})`
+    : `Every shape on every level is already within ${S.tol} px at 4 edges.`;
   go();
 }
-$('refPass').onclick = () => handleRefine(false);
-$('refAll').onclick = () => handleRefine(true);
+
+function handleRefineShape() {
+  if (S.mode !== 'poly') {
+    alert('Set Shape style to Blocking polygons first.');
+    return;
+  }
+  const q = curShape();
+  if (!q) {
+    $('refTxt').textContent = 'Click a polygon on the live canvas to select it, then refine that shape.';
+    return;
+  }
+  const res = refineShape(q, readSchedule());
+  if (!res) {
+    $('refTxt').textContent = 'That shape has no contour detail left to refine.';
+    return;
+  }
+  const level = levelName(activePass());
+  processImage(false);
+
+  const delta = res.limit - res.before;
+  const change = delta === 0
+    ? `stayed at ${res.limit} edges`
+    : `${res.before} → ${res.limit} edges (${delta > 0 ? '+' : ''}${delta})`;
+  const fit = res.err <= S.tol
+    ? `worst point now within ${S.tol} px`
+    : `closest possible is ${res.err.toFixed(1)} px at this contour detail`;
+  $('refTxt').textContent =
+    `${level} shape ${change} · ${fit} (steps +${res.steps.join(' → +')}). Other shapes keep their limits.`;
+}
+$('refPass').onclick = handleRefineShape;
+$('refAll').onclick = handleRefineAll;
 
 /* ---------- polygon editor ---------- */
 const bump = d => {

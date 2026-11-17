@@ -51,9 +51,13 @@ assets/js/
 
 - `errCurve(p)` records worst-point distance after each additional edge.
 - `stagedLimit(E, L0, tol, steps)` grows from `L0` with coarse steps then backs off and refines.
-- `refinePasses(all, schedule)` writes resulting limits into `S.over[key]`.
-- `app.handleRefine` sets `maxSides = 4`, clears `over`, rebuilds synchronously, refines, then
+- `refinePasses(schedule)` walks every level and writes resulting limits into `S.over[key]`.
+- `refineShape(q, schedule)` re-refines one shape from 4 edges and writes only that key.
+- `app.handleRefineAll` sets `maxSides = 4`, clears `over`, rebuilds synchronously, refines, then
   schedules a rebuild that applies the per-shape limits.
+- `app.handleRefineShape` takes the polygon selected on the live canvas (`curShape()`), refines it
+  alone, rebuilds synchronously and keeps `S.maxSides` and every other `S.over` entry untouched.
+  `panel()` disables the button when no shape is selected (or the mode is not polygons).
 
 ## Rendering
 
