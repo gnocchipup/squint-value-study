@@ -92,8 +92,12 @@ export function liveSvgStr(interactive) {
 /* Right pane: the progressive value study on a white base. */
 export function studySvgStr() {
   const parts = buildSteppedParts(S.studyStep);
+  const cx = (doc.W * S.crossX).toFixed(1);
+  const cy = (doc.H * S.crossY).toFixed(1);
+  const cross = `<line x1="${cx}" y1="0" x2="${cx}" y2="${doc.H}" stroke="#76b234" stroke-width="1" stroke-dasharray="4 4"/><line x1="0" y1="${cy}" x2="${doc.W}" y2="${cy}" stroke="#76b234" stroke-width="1" stroke-dasharray="4 4"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${doc.W} ${doc.H}" width="${doc.W}" height="${doc.H}" role="img" aria-label="Progressive value study">
    <rect width="${doc.W}" height="${doc.H}" fill="#ffffff"/>
+   ${cross}
    ${parts.fills}
    ${parts.outlines}
   </svg>`;

@@ -35,6 +35,12 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   stayed at 4; re-refining at 4 px returned it to 89 edges. Deselecting disables the button.
 - Screenshots reviewed at 1440×900 and 390×844.
 
+## Completed (this session)
+
+- SVG logo replaces “Squint” text title (image 1 converted to inline SVG).
+- SVG favicon replaces green+white-dot favicon (image 2 converted to inline SVG).
+- Guide cross slider added to value study (Cross X / Cross Y controls render dashed crosshair on study pane).
+
 ## Known issues / deliberate behaviour
 
 - The selected polygon keeps a dashed blue highlight even when the study has removed its contour;
@@ -55,3 +61,5 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   while the study keeps its dark contour.
 - v2.3: "Refine current level" replaced by "Refine current shape"; a full pass at a loose tolerance
   can be followed by per-shape passes at tighter tolerances without disturbing other shapes.
+- v2.4: SVG logo replaces "Squint" title; black eye-icon SVG favicon replaces green+white-dot favicon;
+  guide cross slider added to value study with Cross X / Cross Y dashed crosshair overlay.

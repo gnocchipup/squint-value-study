@@ -41,6 +41,12 @@ former workspace modes (preview and value study) are merged.
 - Consider persisting settings/thresholds in `localStorage`.
 - Consider showing a hover preview of edge counts before selecting a polygon.
 
+## Recent changes (this session)
+
+- Replaced “Squint” h2 title with inline SVG logo (eye + script “Squint”) based on image 1; CSS added for sizing.
+- Replaced green+white-dot favicon data URI with black eye-icon SVG favicon based on image 2.
+- Added guide cross slider for the value study: Cross X / Cross Y range inputs in workbar-opts, `crossX`/`crossY` state in state.js, crosshair dashed lines rendered on the study pane SVG, slider wiring in app.js.
+
 ## Decisions
 
 - Auto-refine workflow: one full pass at a loose tolerance, then select individual shapes for
