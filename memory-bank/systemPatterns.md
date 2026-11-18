@@ -16,7 +16,7 @@ assets/js/
   pipeline.js   thresholds → masks → contours → layers → chips/editor/render
   render.js     stepParts, live/study SVG, chips, editor, panel, labels, render
   export-svg.js steppedSvgStr (embedded interactive script)
-  export-pdf.js PDF writer with JPEG-embedded panes
+  export-pdf.js PDF writer with JPEG panes, vector logo, site link
   app.js        wiring, keyboard, file input, init
 ```
 
@@ -67,6 +67,20 @@ assets/js/
 - `studySvgStr()` = white rect + step fills + dark contours + a centred crosshair group drawn last
   (so it is never covered; `S.crossOpacity` 0 removes it).
 - `render()` clamps the step, updates slider/nav, rewrites both panes, then updates the editor.
+
+## PDF export
+
+- `export-pdf.js` writes PDF 1.4 by hand: one page per step, two JPEG panes (DCTDecode) and
+  Helvetica text. No library.
+- Header logo: `logoPdfOps()` reads `svg.logo path` from `index.html` at export time (single
+  source of truth), converts `M/L/H/V/C/Z` into `m/l/c/h` operators with the path's own fill
+  colour and `f*` fill rule, and the result is stored once in a shared Form XObject. Each page
+  draws it with `q <scale> 0 0 <scale> 36 536 cm /Logo Do Q`, where the scale is
+  `26 / 230` (header height ÷ viewBox height) — not the logo's width/height, which would scale it
+  off the page.
+- The hosted app is linked from a right-aligned green label (`SITE_LABEL`) in the header. Its x is
+  computed from Helvetica AFM advance widths, and each page carries a `/Link` annotation with a
+  `/URI` action over the label, so the whole line is clickable.
 
 ## Conventions
 

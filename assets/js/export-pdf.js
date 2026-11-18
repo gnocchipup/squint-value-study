@@ -4,6 +4,29 @@ import { stepParts } from './render.js';
 
 const PDF_W = 842;
 const PDF_H = 595; /* A4 landscape, points */
+
+/* Header extras: the app's inline logo is redrawn as PDF vector paths and the
+   hosted site is linked from a right-aligned label on every page. */
+const SITE_URL = 'https://gnocchipup.github.io/squint-value-study/';
+const SITE_LABEL = 'gnocchipup.github.io/squint-value-study';
+const SITE_SIZE = 8.5;
+const SITE_BASE = 546;
+const SITE_RIGHT = PDF_W - 36;
+const LOGO_BOX = { x: 36, y: 536, h: 26 };
+const LOGO_VB = { x: 68, y: 46, w: 558, h: 230 };
+const LOGO_SCALE = LOGO_BOX.h / LOGO_VB.h; /* header height / viewBox height */
+
+/* Helvetica advance widths (/1000 em) for the characters in SITE_LABEL, so the
+   link can be right-aligned without a text-shaping engine. */
+const HELV_W = {
+  a: 556, b: 556, c: 500, d: 556, e: 556, g: 556, h: 556, i: 222, l: 222,
+  n: 556, o: 556, p: 556, q: 556, s: 500, t: 278, u: 556, v: 500, y: 500,
+  '.': 278, '/': 278, '-': 333
+};
+const helvWidth = (s, size) =>
+  ([...s].reduce((w, ch) => w + (HELV_W[ch] || 556), 0) * size) / 1000;
+const siteX = () => SITE_RIGHT - helvWidth(SITE_LABEL, SITE_SIZE);
+const siteRect = () => [siteX() - 1.5, SITE_BASE - 3, SITE_RIGHT + 1, SITE_BASE + 6.5];
 const loadImg = src =>
   new Promise((res, rej) => {
     const im = new Image();
@@ -72,6 +95,73 @@ function stepTitleAscii(step) {
   return name + ' - ' + ph;
 }
 
+/* Path operators for the header logo, read from the inline SVG in index.html so
+   the page markup stays the single source of truth. Coordinates are moved into
+   the logo's own space (origin at the viewBox corner, y up) and the page scales
+   them into the header box. Returns null when the markup uses a command this
+   converter does not handle, and the header then falls back to the old text
+   title. */
+let logoOps = null;
+function logoPdfOps() {
+  const els = [...document.querySelectorAll('svg.logo path')];
+  if (!els.length) return null;
+  const r2 = v => Math.round(v * 100) / 100;
+  const X = v => r2(v - LOGO_VB.x);
+  const Y = v => r2(LOGO_VB.y + LOGO_VB.h - v);
+  const out = [];
+  for (const el of els) {
+    const d = el.getAttribute('d') || '';
+    const tok = d.match(/[a-zA-Z]|-?(?:\d*\.\d+|\d+)(?:e[-+]?\d+)?/g);
+    if (!tok) return null;
+    const ops = [];
+    let i = 0;
+    let cmd = '';
+    let x = 0;
+    let y = 0;
+    let sx = 0;
+    let sy = 0;
+    while (i < tok.length) {
+      if (/[a-zA-Z]/.test(tok[i])) cmd = tok[i++];
+      const up = cmd.toUpperCase();
+      const rel = cmd !== up;
+      const num = () => +tok[i++];
+      if (up === 'M' || up === 'L') {
+        const nx = num();
+        const ny = num();
+        x = rel ? x + nx : nx;
+        y = rel ? y + ny : ny;
+        if (up === 'M') {
+          sx = x;
+          sy = y;
+          ops.push(`${X(x)} ${Y(y)} m`);
+          cmd = rel ? 'l' : 'L';
+        } else ops.push(`${X(x)} ${Y(y)} l`);
+      } else if (up === 'H' || up === 'V') {
+        const n = num();
+        if (up === 'H') x = rel ? x + n : n;
+        else y = rel ? y + n : n;
+        ops.push(`${X(x)} ${Y(y)} l`);
+      } else if (up === 'C') {
+        const a = [num(), num(), num(), num(), num(), num()];
+        const ox = rel ? x : 0;
+        const oy = rel ? y : 0;
+        ops.push(`${X(a[0] + ox)} ${Y(a[1] + oy)} ${X(a[2] + ox)} ${Y(a[3] + oy)} ${X(a[4] + ox)} ${Y(a[5] + oy)} c`);
+        x = a[4] + ox;
+        y = a[5] + oy;
+      } else if (up === 'Z') {
+        ops.push('h');
+        x = sx;
+        y = sy;
+      } else return null;
+    }
+    const rgb = (el.getAttribute('fill') || 'rgb(0,0,0)').match(/\d+/g) || [0, 0, 0];
+    out.push(rgb.slice(0, 3).map(v => (v / 255).toFixed(3)).join(' ') + ' rg');
+    out.push(ops.join('\n'));
+    out.push(el.getAttribute('fill-rule') === 'evenodd' ? 'f*' : 'f');
+  }
+  return out.join('\n');
+}
+
 function pdfPageContent(index, count, step) {
   const layerCount = S.steps - 1;
   const totalSteps = 1 + layerCount * 3;
@@ -96,7 +186,14 @@ function pdfPageContent(index, count, step) {
   const L = [];
   L.push('q');
   L.push('0.16 0.16 0.16 rg');
-  L.push(`BT /F2 22 Tf 1 0 0 1 36 545 Tm (${pdfEsc('Squint')}) Tj ET`);
+  if (logoOps) {
+    const s = Math.round(LOGO_SCALE * 10000) / 10000;
+    L.push(`q ${s} 0 0 ${s} ${LOGO_BOX.x} ${LOGO_BOX.y} cm /Logo Do Q`);
+  } else L.push(`BT /F2 22 Tf 1 0 0 1 36 545 Tm (${pdfEsc('Squint')}) Tj ET`);
+  const linkX = f(siteX());
+  L.push('0.463 0.698 0.204 rg');
+  L.push(`BT /F1 ${SITE_SIZE} Tf 1 0 0 1 ${linkX} ${SITE_BASE} Tm (${pdfEsc(SITE_LABEL)}) Tj ET`);
+  L.push(`0.463 0.698 0.204 RG 0.5 w ${linkX} ${SITE_BASE - 1.6} m ${f(SITE_RIGHT)} ${SITE_BASE - 1.6} l S`);
   L.push('0.47 0.47 0.47 rg');
   L.push(`BT /F1 10 Tf 1 0 0 1 36 527 Tm (${pdfEsc('Progressive value study - one page per step')}) Tj ET`);
   L.push('0.85 0.85 0.85 RG 0.8 w');
@@ -132,17 +229,20 @@ function buildPdf(pages) {
   push(new Uint8Array([0x25, 0xe2, 0xe3, 0xcf, 0xd3, 0x0a])); /* binary marker */
 
   const n = pages.length;
-  const F1 = 3 + n * 4;
+  const perPage = 5;
+  const LOGO = 3 + n * perPage;
+  const F1 = LOGO + 1;
   const F2 = F1 + 1;
-  const kids = pages.map((_, i) => 3 + i * 4 + ' 0 R').join(' ');
+  const kids = pages.map((_, i) => 3 + i * perPage + ' 0 R').join(' ');
   mark(1); push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
   mark(2); push(`2 0 obj\n<< /Type /Pages /Count ${n} /Kids [${kids}] >>\nendobj\n`);
 
   pages.forEach((pg, i) => {
-    const pid = 3 + i * 4;
+    const pid = 3 + i * perPage;
     const cid = pid + 1;
     const i0 = pid + 2;
     const i1 = pid + 3;
+    const aid = pid + 4;
     const content = enc.encode(pdfPageContent(i, n, pg.step));
     mark(cid);
     push(`${cid} 0 obj\n<< /Length ${content.length} >>\nstream\n`);
@@ -154,9 +254,18 @@ function buildPdf(pages) {
       push(img.bytes);
       push('\nendstream\nendobj\n');
     });
+    const [ax1, ay1, ax2, ay2] = siteRect();
+    mark(aid);
+    push(`${aid} 0 obj\n<< /Type /Annot /Subtype /Link /Rect [${ax1.toFixed(2)} ${ay1.toFixed(2)} ${ax2.toFixed(2)} ${ay2.toFixed(2)}] /Border [0 0 0] /A << /S /URI /URI (${pdfEsc(SITE_URL)}) >> >>\nendobj\n`);
     mark(pid);
-    push(`${pid} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_W} ${PDF_H}] /Resources << /XObject << /Im0 ${i0} 0 R /Im1 ${i1} 0 R >> /Font << /F1 ${F1} 0 R /F2 ${F2} 0 R >> >> /Contents ${cid} 0 R >>\nendobj\n`);
+    push(`${pid} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_W} ${PDF_H}] /Resources << /XObject << /Im0 ${i0} 0 R /Im1 ${i1} 0 R /Logo ${LOGO} 0 R >> /Font << /F1 ${F1} 0 R /F2 ${F2} 0 R >> >> /Annots [${aid} 0 R] /Contents ${cid} 0 R >>\nendobj\n`);
   });
+
+  const logoBytes = enc.encode(logoOps || '');
+  mark(LOGO);
+  push(`${LOGO} 0 obj\n<< /Type /XObject /Subtype /Form /FormType 1 /BBox [0 0 ${LOGO_VB.w} ${LOGO_VB.h}] /Resources << >> /Length ${logoBytes.length} >>\nstream\n`);
+  push(logoBytes);
+  push('\nendstream\nendobj\n');
 
   mark(F1); push(`${F1} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n`);
   mark(F2); push(`${F2} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n`);
@@ -188,6 +297,7 @@ export async function exportPdf(btnId) {
   try {
     const refHref = S.studyGray ? doc.srcGray : doc.srcColor;
     const refImg = await loadImg(refHref);
+    logoOps = logoPdfOps();
     const layerCount = S.steps - 1;
     const totalSteps = 1 + layerCount * 3;
     const scale = clamp(820 / doc.W, 0.5, 4);

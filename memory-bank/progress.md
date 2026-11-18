@@ -35,6 +35,7 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   stayed at 4; re-refining at 4 px returned it to 89 edges. Deselecting disables the button.
 - Screenshots reviewed at 1440×900 and 390×844.
 - Crosshair suite: 73 checks across all 13 steps (present, painted after every fill/contour, centred, 0.5 px, opacity mirrored, hidden at 0) plus a live CDP run at step 4 — crosshair on top, both axes centred and full-span, opacity slider live, zero console errors. A preview page confirmed G0 fill, fully dark and opacity-0 rendering.
+- PDF header suite: 32 structural checks on a 13-page export (xref offsets, stream lengths, shared logo form BBox and 4 fills, one /Link annotation per page, green right-aligned label, no text-title fallback). Rendered pages 1, 6 and 13 with the Windows PDF engine to confirm the logo and link appear on every page.
 
 ## Completed (this session)
 
@@ -42,6 +43,7 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - SVG favicon replaces green+white-dot favicon (image 2 converted to inline SVG).
 - Guide cross slider added to value study (Cross X / Cross Y controls render dashed crosshair on study pane).
 - Crosshair corrected: pinned to the centre, drawn as the top layer of the study SVG so no fill or contour can hide it, thinned to a 0.5 px dashed line, and controlled by a single Cross opacity slider; Cross X / Cross Y removed.
+- PDF export header: the logo replaces the "Squint" text title (inline SVG paths converted to PDF vector ops, shared Form XObject, uniform 26/230 scale), and a right-aligned green label links to https://gnocchipup.github.io/squint-value-study/ through a /Link /URI annotation on every page.
 
 ## Known issues / deliberate behaviour
 
@@ -67,3 +69,4 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   guide cross slider added to value study with Cross X / Cross Y dashed crosshair overlay.
 - v2.5: crosshair pinned to the centre, painted last so it never disappears behind fills, thinned to
   0.5 px, and controlled by a single Cross opacity slider instead of Cross X / Cross Y.
+- v2.6: PDF header carries the app logo as vector paths plus a clickable link to the hosted site.
