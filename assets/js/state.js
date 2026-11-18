@@ -28,8 +28,7 @@ export const S = {
   lineOpacity: 0.9,
   fillOpacity: 0.25,
   studyGray: false,
-  crossX: 0.5,
-  crossY: 0.5,
+  crossOpacity: 0.6,
   tol: 3,
   /* live-canvas render options */
   fills: true,

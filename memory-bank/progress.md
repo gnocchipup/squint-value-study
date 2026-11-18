@@ -34,12 +34,14 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   edges while every other shape kept its limit, edge count and exact geometry and `maxSides`
   stayed at 4; re-refining at 4 px returned it to 89 edges. Deselecting disables the button.
 - Screenshots reviewed at 1440×900 and 390×844.
+- Crosshair suite: 73 checks across all 13 steps (present, painted after every fill/contour, centred, 0.5 px, opacity mirrored, hidden at 0) plus a live CDP run at step 4 — crosshair on top, both axes centred and full-span, opacity slider live, zero console errors. A preview page confirmed G0 fill, fully dark and opacity-0 rendering.
 
 ## Completed (this session)
 
 - SVG logo replaces “Squint” text title (image 1 converted to inline SVG).
 - SVG favicon replaces green+white-dot favicon (image 2 converted to inline SVG).
 - Guide cross slider added to value study (Cross X / Cross Y controls render dashed crosshair on study pane).
+- Crosshair corrected: pinned to the centre, drawn as the top layer of the study SVG so no fill or contour can hide it, thinned to a 0.5 px dashed line, and controlled by a single Cross opacity slider; Cross X / Cross Y removed.
 
 ## Known issues / deliberate behaviour
 
@@ -63,3 +65,5 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   can be followed by per-shape passes at tighter tolerances without disturbing other shapes.
 - v2.4: SVG logo replaces "Squint" title; black eye-icon SVG favicon replaces green+white-dot favicon;
   guide cross slider added to value study with Cross X / Cross Y dashed crosshair overlay.
+- v2.5: crosshair pinned to the centre, painted last so it never disappears behind fills, thinned to
+  0.5 px, and controlled by a single Cross opacity slider instead of Cross X / Cross Y.

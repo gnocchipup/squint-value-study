@@ -208,8 +208,7 @@ $('curves').onchange = e => { S.curves = e.target.checked; render(); };
 $('lineOpacity').oninput = e => { S.lineOpacity = +e.target.value; render(); };
 $('fillOpacity').oninput = e => { S.fillOpacity = +e.target.value; render(); };
 $('studyGray').onchange = e => { S.studyGray = e.target.checked; render(); };
-$('crossX').oninput = e => { S.crossX = +e.target.value; render(); };
-$('crossY').oninput = e => { S.crossY = +e.target.value; render(); };
+$('crossOpacity').oninput = e => { S.crossOpacity = +e.target.value; render(); };
 
 /* ---------- copy & export ---------- */
 $('copy').onclick = async () => {
@@ -260,8 +259,7 @@ $('curves').checked = S.curves;
 $('studyGray').checked = S.studyGray;
 $('lineOpacity').value = S.lineOpacity;
 $('fillOpacity').value = S.fillOpacity;
-$('crossX').value = S.crossX;
-$('crossY').value = S.crossY;
+$('crossOpacity').value = S.crossOpacity;
 $('mode').value = S.mode;
 $('ptype').value = S.ptype;
 $('maxs').value = S.maxSides;
