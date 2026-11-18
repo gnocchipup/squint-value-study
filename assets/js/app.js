@@ -52,6 +52,23 @@ $('play').onclick = () => {
   }, 700);
 };
 
+/* ---------- settings panel ---------- */
+const PANEL_KEY = 'squint.panelHidden';
+const appShell = () => document.querySelector('.app');
+const panelHidden = () => appShell().classList.contains('panel-hidden');
+
+function setPanelHidden(hidden) {
+  appShell().classList.toggle('panel-hidden', hidden);
+  const btn = $('togglePanel');
+  btn.setAttribute('aria-expanded', String(!hidden));
+  btn.title = (hidden ? 'Show' : 'Hide') + ' the settings panel (\\)';
+  $('togglePanelTxt').textContent = hidden ? 'Show panel' : 'Hide panel';
+  /* Do not leave focus inside a display:none subtree. */
+  if (hidden && $('sidebar').contains(document.activeElement)) btn.focus();
+  try { localStorage.setItem(PANEL_KEY, hidden ? '1' : '0'); } catch (err) { /* storage unavailable */ }
+}
+$('togglePanel').onclick = () => setPanelHidden(!panelHidden());
+
 document.addEventListener('keydown', e => {
   if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
   if (e.altKey || e.ctrlKey || e.metaKey) return;
@@ -62,6 +79,7 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'End') { e.preventDefault(); setStep(max); }
   else if (e.key === 'PageUp') { e.preventDefault(); setStep(S.studyStep + 3); }
   else if (e.key === 'PageDown') { e.preventDefault(); setStep(S.studyStep - 3); }
+  else if (e.key === '\\') { e.preventDefault(); setPanelHidden(!panelHidden()); }
 });
 
 /* ---------- processing settings ---------- */
@@ -266,6 +284,11 @@ $('maxs').value = S.maxSides;
 $('tol').value = S.tol;
 $('sched').value = '5,3,1';
 $('ptype').style.display = $('poly-default').style.display = S.mode === 'poly' ? 'block' : 'none';
+
+/* Restore the last settings-panel choice. */
+let panelSaved = false;
+try { panelSaved = localStorage.getItem(PANEL_KEY) === '1'; } catch (err) { /* storage unavailable */ }
+setPanelHidden(panelSaved);
 
 labels();
 startImage(sampleImage());

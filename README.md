@@ -20,6 +20,9 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
   result is the smallest workable polygon per shape. Run it on **all levels** first, then select
   individual shapes and refine **just that shape** at a tighter tolerance — other shapes keep
   their limits.
+- **Collapsible settings panel** — once the image, thresholds and shape settings are dialled in,
+  hide the right-hand settings column with **Hide panel** (or the `\` key) so the live canvas and
+  value study get the whole window. The choice is remembered between visits.
 - **Per-shape edge limits** — click any polygon on the live canvas, then nudge its limit by ±1 or
   ±10, type an exact value, reset it, or clear every custom limit.
 - **Tunable value steps** — 2–9 steps, manual thresholds per grey, and a threshold curve (γ).
@@ -31,7 +34,8 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
   when the study removes the outline, and fades with the Line slider (0 hides it).
 - **Lichess-inspired light palette** (neutral greys + a single green accent, one shade lighter
   than lichess) with a matching dark theme.
-- **Keyboard-first stepping** — arrow keys, Home/End and PageUp/PageDown.
+- **Keyboard-first stepping** — arrow keys, Home/End and PageUp/PageDown, plus `\` to show or
+  hide the settings panel.
 
 ## Quick start
 
@@ -66,7 +70,10 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 7. Step through the study with **← Prev / Next →**, the slider, **Play**, or the arrow keys.
    Each level has three phases: *outline only* → *fill + outline* → *outline removed*. The live
    canvas mirrors those phases, and the **Line** slider controls the reference contour's opacity.
-8. Export with **Export stepped SVG**, **Export PDF**, or **Copy step SVG**.
+8. When the settings are settled, click **Hide panel** (or press `\`) to give the whole window to
+   the live canvas and the study. **Show panel** brings the settings back; the button stays in the
+   header, and the last choice is restored on the next visit.
+9. Export with **Export stepped SVG**, **Export PDF**, or **Copy step SVG**.
 
 ### Defaults
 
@@ -135,6 +142,8 @@ selectable polygons always match what you are looking at. At step `0`, level 1 (
   objects exported from `state.js`; this keeps the modules acyclic.
 - The PDF is written byte-by-byte with embedded JPEG panes, so no external library is needed.
 - Source images are downscaled to a maximum dimension of 680 px for responsive tracing.
+- The only thing kept between visits is the settings-panel preference (`squint.panelHidden` in
+  `localStorage`); all other settings reset on reload.
 - Everything runs locally in the browser; no uploads, no analytics.
 
 ### Browser support

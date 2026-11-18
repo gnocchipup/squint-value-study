@@ -30,6 +30,8 @@
 - Kuwahara/bilateral are O(pixels × radius²); strength is capped at 6.
 - Clipboard writes need a secure context (HTTPS or localhost); a textarea fallback exists.
 - PDF export rasterises every step and can take a moment for many steps.
+- `localStorage` stores one key only — `squint.panelHidden` (settings-panel visibility); writes are
+  wrapped in `try/catch` so blocked storage cannot break startup.
 
 ## Deployment
 

@@ -17,6 +17,8 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   hovered.
 - Pre-filters, thresholds, gamma, smoothing, segment budget.
 - Exports: stepped SVG, PDF, copy current step SVG.
+- Settings panel can be hidden from the header (**Hide panel** / **Show panel**) or with `\`, giving
+  the live canvas and study the full window; the choice persists in `localStorage`.
 - Responsive desktop/mobile layout; dark theme.
 - Source-image and auto-refine action buttons share a 36 px height and align on both edges;
   the file-picker label resets the global label margin and matches the button font.
@@ -36,9 +38,18 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Screenshots reviewed at 1440×900 and 390×844.
 - Crosshair suite: 73 checks across all 13 steps (present, painted after every fill/contour, centred, 0.5 px, opacity mirrored, hidden at 0) plus a live CDP run at step 4 — crosshair on top, both axes centred and full-span, opacity slider live, zero console errors. A preview page confirmed G0 fill, fully dark and opacity-0 rendering.
 - PDF header suite: 32 structural checks on a 13-page export (xref offsets, stream lengths, shared logo form BBox and 4 fills, one /Link annotation per page, green right-aligned label, no text-title fallback). Rendered pages 1, 6 and 13 with the Windows PDF engine to confirm the logo and link appear on every page.
+- Settings-panel suite: 21/21 checks in headless Edge via CDP at 1440×900, 1100×900 and 390×844 —
+  button presence/copy/ARIA, sidebar `display:none`, single-column shell, pane widths 503 → 686 px,
+  step navigation while hidden, `\` shortcut toggling both ways (and ignored inside a text field),
+  focus hand-off, stored preference surviving reload in both directions, artwork growing 333 → 473 px
+  on a width-bound 1100 px window, no horizontal overflow on mobile, and zero console errors.
+  Screenshots reviewed in light, dark and mobile layouts.
 
 ## Completed (this session)
 
+- Collapsible settings panel: header toggle + `\` shortcut collapses the right-hand sidebar to a
+  single-column shell, restores focus out of the hidden panel and remembers the choice in
+  `localStorage`.
 - SVG logo replaces “Squint” text title (image 1 converted to inline SVG).
 - SVG favicon replaces green+white-dot favicon (image 2 converted to inline SVG).
 - Guide cross slider added to value study (Cross X / Cross Y controls render dashed crosshair on study pane).
@@ -70,3 +81,5 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - v2.5: crosshair pinned to the centre, painted last so it never disappears behind fills, thinned to
   0.5 px, and controlled by a single Cross opacity slider instead of Cross X / Cross Y.
 - v2.6: PDF header carries the app logo as vector paths plus a clickable link to the hosted site.
+- v2.7: settings panel can be collapsed (header toggle or `\`), letting the live canvas and value
+  study take the full window; the preference persists across visits.

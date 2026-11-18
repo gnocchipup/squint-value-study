@@ -27,6 +27,8 @@ assets/js/
 - `doc` holds per-image data: dimensions, luminance, thresholds, manual thresholds, selected grey,
   layers, cached contours (`LP`) and error curves (`EC`), source data URLs.
 - Both are exported objects, not reassigned imports, so modules stay acyclic and live-updating.
+- Shell layout (settings panel shown/hidden) is deliberately not in `S`: it is an `.app` class
+  toggled by `setPanelHidden()` in `app.js` and mirrored to `localStorage`.
 
 ## Step model
 
@@ -88,3 +90,5 @@ assets/js/
 - DOM lookups through `$`; no inline HTML handlers.
 - Debounced reprocessing (`go`) at 80 ms for slider input.
 - UI copy uses "level" for value layers and "step" for the progressive study position.
+- Shell layout state lives as a class on `.app` (`panel-hidden`) rather than inline styles, so CSS
+  owns the two-column → one-column switch.

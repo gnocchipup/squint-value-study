@@ -7,6 +7,13 @@ former workspace modes (preview and value study) are merged.
 
 ## Recent changes (this session)
 
+- Added a **settings-panel toggle**: a "Hide panel / Show panel" button in the workspace header
+  (sidebar icon, `aria-expanded`, `aria-controls="sidebar"`) plus a `\` keyboard shortcut (ignored
+  while typing in a field). Hiding adds `.panel-hidden` to `.app`, which collapses the shell to a
+  single grid column and removes the sidebar, so the live canvas and value study take the reclaimed
+  width (measured 333 → 473 px of artwork on a 1100 px-wide window). Focus moves to the button when
+  the panel is hidden; the choice is stored in `localStorage` (`squint.panelHidden`) and restored on
+  load.
 - Replaced “Refine current level” with **Refine current shape**: it re-refines only the polygon
   selected on the live canvas (from 4 edges up to the tolerance) and writes only that shape's
   limit. “Refine all levels” remains the full reset pass. The button is disabled until a polygon

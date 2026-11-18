@@ -22,6 +22,9 @@ a polygonal block that can be drawn or painted with the fewest possible edges.
 
 ## UX rules
 
+- The settings column is optional once the image is set up: **Hide panel** (or `\`) collapses it so
+  the live canvas and the study own the window; the choice is remembered and the toggle stays in the
+  header so the panel is always one click away.
 - Live-canvas toggles (fills, split dots, curved paths) never change the value study's
   progression. The reference contour mirrors the study's outline phase and is faded by the Line
   slider only.
