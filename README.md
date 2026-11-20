@@ -38,6 +38,10 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
 - **Levels shown** — one switch per value level under the grey chips (G0 … black). All are on by
   default; switch one off and its fills, contours and hit areas leave the study, the live canvas and
   the exports, so you can study, say, just G0 and black.
+- **Block-in passes** — every value is split into **large** and **small** shapes at a settable area
+  threshold, and each pass blocks in on its own. Drag the pass rows (or use ↑ / ↓) to set the
+  order — for example all the large masses first, then the small details — and the step slider
+  follows that order.
 - **Lichess-inspired light palette** (neutral greys + a single green accent, one shade lighter
   than lichess) with a matching dark theme.
 - **Keyboard-first stepping** — arrow keys, Home/End and PageUp/PageDown, plus `\` to show or
@@ -65,26 +69,30 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
    step when the count changes — the same level and phase stay in view, and a study that was
    already complete stays complete. **Levels shown** switches any grey (or black) out of the study
    without changing its threshold or polygons.
-3. Pick a **shape style**:
+3. Split each value into large and small shapes with the **Large shape threshold** (px²), then
+   arrange the **Block-in order** list: drag a row, or use its ↑ / ↓ buttons, so the big masses
+   block in first and the small details later. **Reset order** returns to large-by-value followed by
+   small-by-value. Each row shows how many shapes that pass contains.
+4. Pick a **shape style**:
    - *Smooth curves* — tolerance-based simplification, good for painterly output.
    - *Blocking polygons* — polygon construction with per-shape edge limits.
-4. For blocking polygons, choose **Inscribed** or **Containing** (Containing is the default) and a
+5. For blocking polygons, choose **Inscribed** or **Containing** (Containing is the default) and a
    default edge limit.
-5. Click a shape on the **live canvas** to select it, then tune its edge limit in the polygon editor.
-6. Click **Refine all levels** for a full pass. Every shape is reset to 4 edges first, so
+6. Click a shape on the **live canvas** to select it, then tune its edge limit in the polygon editor.
+7. Click **Refine all levels** for a full pass. Every shape is reset to 4 edges first, so
    refinement grows each one from the minimum to the least number of edges that meets the
    tolerance. Then select individual shapes on the live canvas, lower the tolerance (for example
    `1.5` or `2`), and click **Refine current shape** to add detail to that shape only — every
    other shape keeps the limit the full pass gave it.
-7. Step through the study with **← Prev / Next →**, the slider, **Play**, or the arrow keys.
-   Each level has three phases: *outline only* → *fill + outline* → *outline removed*. The live
+8. Step through the study with **← Prev / Next →**, the slider, **Play**, or the arrow keys.
+   Each pass has three phases: *outline only* → *fill + outline* → *outline removed*. The live
    canvas mirrors those phases, and the **Line** slider controls the reference contour's opacity.
    The **Cross** slider sets the guide crosshair's opacity, and **V**/**H** set how many vertical
    and horizontal guide lines it draws (1–3 each).
-8. When the settings are settled, click **Hide panel** (or press `\`) to give the whole window to
+9. When the settings are settled, click **Hide panel** (or press `\`) to give the whole window to
    the live canvas and the study. **Show panel** brings the settings back; the button stays in the
    header, and the last choice is restored on the next visit.
-9. Export with **Export stepped SVG**, **Export PDF**, or **Copy step SVG**.
+10. Export with **Export stepped SVG**, **Export PDF**, or **Copy step SVG**.
 
 ### Defaults
 
@@ -95,14 +103,16 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 | Reference contour | Mirrors the study phase; Line slider sets opacity (0 hides) |
 | Guide crosshair | 1 × 1 lines on the study at 90% opacity; **V**/**H** set 1–3 lines per axis, **Cross** sets opacity |
 | Levels shown | Every level on (G0 … black); switches are kept by level name across grey-count changes |
+| Large shape threshold | 1500 px² (shapes at or above it are large) |
+| Block-in order | Large passes by value, then small passes by value |
 | Shape style | Smooth curves |
 | Polygon type | Containing (edges outside the shape) |
 | Default edge limit per shape | 250 |
 | Auto-refine starting limit | 4 edges, then coarse → fine steps (all levels, or the selected shape) |
 
-> The live canvas mirrors the study's current phase: fills appear as the study fills levels,
+> The live canvas mirrors the study's current pass: fills appear as the study fills passes,
 > and the blue contour only exists while the study shows an outline. Use the **Line** slider to
-> fade it; **Split dots** shows the active level's polygon vertices.
+> fade it; **Split dots** shows the active pass's polygon vertices.
 
 ## Deploying to GitHub Pages
 

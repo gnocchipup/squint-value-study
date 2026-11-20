@@ -75,6 +75,19 @@ button.pri:hover:not(:disabled){background:var(--accent-strong);border-color:var
 .level-toggle-label{flex:0 0 100%;font-size:10px;color:var(--mut);font-weight:600;margin:0 0 1px}
 .level-toggle{padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);font-size:10px;font-weight:600;gap:5px}
 .level-toggle input{margin:0;accent-color:var(--accent)}
+
+/* ---------- pass order ---------- */
+.pass-list{list-style:none;margin:9px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+.pass-row{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:4px 6px;background:var(--panel);font-size:11px;color:var(--ink);cursor:grab}
+.pass-row.dragging{opacity:.45}
+.pass-row.over{border-color:var(--accent);background:var(--panel-2)}
+.pass-row.off{opacity:.45}
+.pass-grip{color:var(--mut);font-size:12px;line-height:1;cursor:grab}
+.pass-swatch{width:12px;height:12px;flex:0 0 auto;border-radius:3px;border:1px solid var(--line-strong)}
+.pass-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.pass-count{color:var(--mut);font-size:10px;min-width:22px;text-align:right}
+.pass-move{min-height:22px;height:22px;width:22px;padding:0;font-size:11px;line-height:1;font-weight:700;color:var(--mut)}
+.pass-move:hover:not(:disabled){color:var(--ink)}
 .chk{display:inline-flex;gap:7px;align-items:center;margin:0;font-size:11px;color:var(--ink);white-space:nowrap}
 .chk input{accent-color:var(--accent);margin:0}
 .note{font-size:11px;color:var(--mut);margin-top:7px;line-height:1.45}

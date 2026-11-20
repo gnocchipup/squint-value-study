@@ -105,6 +105,14 @@
    <div class="row"><button id="auto">Reset thresholds</button></div>
    <div class="note" id="thrTxt"></div></div>
 
+  <div class="card"><h2>Block-in order</h2>
+   <label><span>Large shape threshold (px²)</span><span id="vPassArea">1500</span></label>
+   <input type="range" id="passArea" min="100" max="8000" step="100" value="1500">
+   <div class="note">Shapes at or above this area are <strong>large</strong>; smaller ones are <strong>small</strong>. Each pass blocks in every large (or small) shape of one value, in the order below.</div>
+   <ol class="pass-list" id="passList" aria-label="Block-in pass order"></ol>
+   <div class="row"><button id="orderReset">Reset order</button></div>
+   <div class="note">Drag a row, or use ↑ / ↓, to change which shapes block in first. The step slider follows this order; the numbers are shape counts.</div></div>
+
   <div class="card"><h2>Shape quality</h2>
    <label><span>Shape style</span></label>
    <select id="mode"><option value="curve">Smooth curves (tolerance)</option><option value="poly">Blocking polygons (split worst edge)</option></select>

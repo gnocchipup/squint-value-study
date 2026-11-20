@@ -1,36 +1,63 @@
 /* Rendering for the merged live-canvas / value-study workspace. */
 import {
-  $, S, doc, clamp, layerCount, totalSteps, activeLayer, activePass,
-  curvesEnabled, shade, levelName, crossCount, levelOn, OVERLAY, CONTOUR, CROSS
+  $, S, doc, clamp, layerCount, totalSteps, activeLayer, activeSize,
+  stepMeta, parsePass, defaultOrder, curvesEnabled, shade, levelName, blockName,
+  crossCount, levelOn, OVERLAY, CONTOUR, CROSS
 } from './state.js';
 import { dPath, area } from './geometry.js';
 import { errAt, getCurve } from './polygons.js';
 
-/* What the given progressive step fills and outlines. */
+/* Level shapes split into large / small at S.passArea. The split is cached
+   against the current layers array and threshold, so a step change is cheap. */
+let partCache = { layers: null, area: 0, parts: [] };
+function partitions() {
+  if (partCache.layers === doc.layers && partCache.area === S.passArea) return partCache.parts;
+  const parts = [];
+  for (const list of doc.layers) {
+    const big = [];
+    const small = [];
+    for (const q of list) (area(q) >= S.passArea ? big : small).push(q);
+    parts.push({ L: big, S: small });
+  }
+  partCache = { layers: doc.layers, area: S.passArea, parts };
+  return parts;
+}
+
+/* The shapes of one pass (a level's large or small group). */
+export function passShapes(level, size) {
+  const p = partitions()[level];
+  return p ? p[size] || [] : [];
+}
+
+/* Shape count for one pass, used by the order list. */
+export const passCount = (level, size) => passShapes(level, size).length;
+
+/* What the given progressive step fills and outlines: every earlier pass is
+   filled, the current pass follows its phase, later passes are untouched. */
 export function stepParts(step) {
   const fills = [];
   const outlines = [];
-  if (!doc.layers.length) return { fills, outlines };
-  const lc = layerCount();
+  if (!doc.layers.length || !S.order.length) return { fills, outlines };
   const cv = curvesEnabled();
-  for (let j = 0; j < lc; j++) {
-    if (!levelOn(j)) continue;
+  const meta = stepMeta(step);
+  const lc = layerCount();
+  for (let i = 0; i < S.order.length; i++) {
+    if (meta && i > meta.index) break;
+    const { level, size } = parsePass(S.order[i]);
+    if (level >= lc || !levelOn(level)) continue;
     let fill = false;
     let outline = false;
-    if (step > 0) {
-      const n = step - 1;
-      const level = Math.floor(n / 3);
-      const phase = n % 3;
-      if (j < level) fill = true;
-      else if (j === level) {
-        fill = phase >= 1;
-        outline = phase <= 1;
+    if (meta) {
+      if (i < meta.index) fill = true;
+      else {
+        fill = meta.phase >= 1;
+        outline = meta.phase <= 1;
       }
     }
     if (!fill && !outline) continue;
-    const d = (doc.layers[j] || []).map(q => dPath(q, cv)).join('');
+    const d = passShapes(level, size).map(q => dPath(q, cv)).join('');
     if (!d) continue;
-    if (fill) fills.push({ d, gray: shade(j + 1) });
+    if (fill) fills.push({ d, gray: shade(level + 1) });
     if (outline) outlines.push({ d });
   }
   return { fills, outlines };
@@ -74,8 +101,9 @@ export function liveSvgStr(interactive) {
     s += '</g>';
   }
 
-  const list = doc.layers[activeLayer()] || [];
-  const activeOn = levelOn(activeLayer());
+  const meta = stepMeta(S.studyStep);
+  const list = meta ? passShapes(meta.level, meta.size) : (doc.layers[0] || []);
+  const activeOn = levelOn(meta ? meta.level : 0);
   if (S.dots && activeOn) {
     for (const q of list)
       for (let i = 0; i < q.length; i += 2)
@@ -129,24 +157,25 @@ export function studySvgStr() {
 
 function updateStepCopy() {
   const step = S.studyStep;
-  const lc = layerCount();
   const total = totalSteps();
+  const meta = stepMeta(step);
   let heading = 'PURE WHITE';
   let detail = 'Blank white base';
-  if (step > 0) {
-    const n = step - 1;
-    const j = Math.floor(n / 3);
-    const phase = n % 3;
-    const name = j === lc - 1 ? 'BLACK' : 'G' + j;
-    heading = name + ' · ' + ['OUTLINE ONLY', 'FILL + OUTLINE', 'OUTLINE REMOVED'][phase];
-    detail = 'Level ' + (j + 1) + '/' + lc + ' · ' + ['Contour only', 'Grey fill + contour', 'Clean fill'][phase];
+  if (meta) {
+    const name = blockName(meta.level).toUpperCase() + (meta.size === 'L' ? ' LARGE' : ' SMALL');
+    heading = name + ' · ' + ['OUTLINE ONLY', 'FILL + OUTLINE', 'OUTLINE REMOVED'][meta.phase];
+    detail = 'Pass ' + (meta.index + 1) + '/' + S.order.length + ' · ' +
+      (meta.size === 'L' ? 'Large' : 'Small') + ' shapes · ' +
+      ['Contour only', 'Grey fill + contour', 'Clean fill'][meta.phase];
   }
   $('studyStepTitle').textContent = heading;
   $('studyStepCount').textContent = step + ' / ' + (total - 1);
   $('stepStageSub').textContent = detail;
   $('vPass').textContent = 'STEP ' + step + ' / ' + (total - 1);
+  const hidden = !levelOn(activeLayer());
   const edit = S.mode === 'poly'
-    ? 'Editing ' + levelName(activePass()) + (levelOn(activeLayer()) ? ' · ' : ' (hidden) · ')
+    ? 'Editing ' + blockName(activeLayer()) + (activeSize() === 'L' ? ' large' : ' small') +
+      (hidden ? ' (hidden) · ' : ' · ')
     : '';
   $('liveBadge').textContent =
     edit + 'Line ' + Math.round(S.lineOpacity * 100) + '% · Fill ' + Math.round(S.fillOpacity * 100) + '%';
@@ -181,6 +210,7 @@ export function chips() {
     c.appendChild(d);
   }
   levelToggles();
+  passList();
 }
 
 /* One switch per value level (G0 … black), all on by default. A level that is
@@ -211,6 +241,105 @@ function levelToggles() {
   });
 }
 
+/* Draggable block-in order: one row per pass. Dragging a row (or the arrow
+   buttons) changes which shapes block in first; the step slider follows. */
+let dragKey = null;
+
+function keepPass(meta, key) {
+  if (!meta || !key) return;
+  const index = S.order.indexOf(key);
+  if (index >= 0) S.studyStep = 1 + 3 * index + meta.phase;
+}
+
+function reorderPass(from, to) {
+  if (from === to || to < 0 || to >= S.order.length) return;
+  const meta = stepMeta(S.studyStep);
+  const key = meta ? S.order[meta.index] : null;
+  const [moved] = S.order.splice(from, 1);
+  S.order.splice(to, 0, moved);
+  keepPass(meta, key);
+  passList();
+  render();
+}
+
+/* Back to large-in-value-order then small-in-value-order. */
+export function resetOrder() {
+  const meta = stepMeta(S.studyStep);
+  const key = meta ? S.order[meta.index] : null;
+  S.order = defaultOrder();
+  keepPass(meta, key);
+  passList();
+  render();
+}
+
+export function passList() {
+  const box = $('passList');
+  box.replaceChildren(...S.order.map((key, i) => {
+    const { level, size } = parsePass(key);
+    const label = blockName(level) + ' · ' + (size === 'L' ? 'Large' : 'Small');
+    const g = shade(level + 1);
+    const li = document.createElement('li');
+    li.className = 'pass-row' + (levelOn(level) ? '' : ' off');
+    li.draggable = true;
+    li.dataset.key = key;
+    li.title = 'Pass ' + (i + 1) + ' · drag to change the blocking order';
+    const grip = document.createElement('span');
+    grip.className = 'pass-grip';
+    grip.setAttribute('aria-hidden', 'true');
+    grip.textContent = '⠿';
+    const sw = document.createElement('span');
+    sw.className = 'pass-swatch';
+    sw.style.background = `rgb(${g},${g},${g})`;
+    const name = document.createElement('span');
+    name.className = 'pass-name';
+    name.textContent = label;
+    const count = document.createElement('span');
+    count.className = 'pass-count';
+    count.textContent = passCount(level, size);
+    const mkMove = (glyph, dir, title) => {
+      const b = document.createElement('button');
+      b.className = 'pass-move ' + (dir < 0 ? 'pass-up' : 'pass-down');
+      b.textContent = glyph;
+      b.title = title;
+      b.setAttribute('aria-label', title);
+      b.onclick = e => { e.stopPropagation(); reorderPass(i, i + dir); };
+      return b;
+    };
+    li.append(grip, sw, name, count,
+      mkMove('↑', -1, 'Move ' + label + ' earlier'),
+      mkMove('↓', 1, 'Move ' + label + ' later'));
+    li.ondragstart = e => {
+      dragKey = key;
+      li.classList.add('dragging');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', key); } catch (err) { /* ignore */ }
+      }
+    };
+    li.ondragend = () => {
+      dragKey = null;
+      li.classList.remove('dragging');
+      box.querySelectorAll('.pass-row.over').forEach(el => el.classList.remove('over'));
+    };
+    li.ondragover = e => {
+      if (dragKey && dragKey !== key) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        li.classList.add('over');
+      }
+    };
+    li.ondragleave = () => li.classList.remove('over');
+    li.ondrop = e => {
+      e.preventDefault();
+      li.classList.remove('over');
+      const from = S.order.indexOf(dragKey);
+      const to = S.order.indexOf(key);
+      if (from >= 0 && to >= 0) reorderPass(from, to);
+    };
+    return li;
+  }));
+}
+
 export function editor() {
   const j = doc.sel - 1;
   const e = $('ed');
@@ -222,9 +351,14 @@ export function editor() {
 }
 
 export function curShape() {
-  const j = activeLayer();
-  if (!levelOn(j)) return null;
-  return S.selKey && doc.layers[j] ? doc.layers[j].find(a => a.key === S.selKey) : null;
+  const meta = stepMeta(S.studyStep);
+  const j = meta ? meta.level : 0;
+  if (!levelOn(j) || !S.selKey || !doc.layers[j]) return null;
+  const q = doc.layers[j].find(a => a.key === S.selKey);
+  if (!q) return null;
+  /* Only the pass in view is editable, the same set that gets hit areas. */
+  const list = meta ? passShapes(meta.level, meta.size) : (doc.layers[0] || []);
+  return list.includes(q) ? q : null;
 }
 
 export function panel() {
@@ -240,7 +374,8 @@ export function panel() {
     const custom = S.over[S.selKey] !== undefined;
     const err = errAt(getCurve(S.selKey), q.length / 2).toFixed(1);
     $('selTxt').textContent =
-      levelName(activePass()) + ' level · ' + q.length / 2 + ' edges rendered · worst error ' + err +
+      blockName(activeLayer()) + (activeSize() === 'L' ? ' large' : ' small') + ' · ' +
+      q.length / 2 + ' edges rendered · worst error ' + err +
       ' px' + (custom ? ' · custom edge limit' : ' · default edge limit');
     $('shapeSides').value = S.over[S.selKey] ?? Math.max(S.maxSides, q.length / 2);
   } else {
@@ -260,4 +395,6 @@ export function labels() {
   $('vMs').textContent = S.maxSides;
   $('maxs').value = S.maxSides;
   $('steps').value = S.steps;
+  $('passArea').value = S.passArea;
+  $('vPassArea').textContent = S.passArea;
 }

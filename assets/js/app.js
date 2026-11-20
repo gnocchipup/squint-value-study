@@ -1,8 +1,8 @@
 /* Application wiring: controls, keyboard, image input and init. */
-import { $, S, doc, clamp, totalSteps, activePass, levelName, crossCount, remapStep } from './state.js';
+import { $, S, doc, clamp, totalSteps, activeLayer, activeSize, blockName, crossCount, stepMeta, rebuildOrder, remapStep } from './state.js';
 import { loadCanvas, sampleImage, readFile } from './image.js';
 import { processImage } from './pipeline.js';
-import { render, labels, curShape, studySvgStr } from './render.js';
+import { render, labels, curShape, studySvgStr, passList, resetOrder } from './render.js';
 import { refinePasses, refineShape } from './polygons.js';
 import { exportSteppedSvg } from './export-svg.js';
 import { exportPdf } from './export-pdf.js';
@@ -85,14 +85,27 @@ document.addEventListener('keydown', e => {
 /* ---------- processing settings ---------- */
 $('steps').oninput = e => {
   const next = +e.target.value;
-  S.studyStep = remapStep(S.studyStep, S.steps, next);
+  const oldMax = totalSteps() - 1;
+  const meta = stepMeta(S.studyStep);
+  const key = meta ? S.order[meta.index] : null;
+  const phase = meta ? meta.phase : 0;
   S.steps = next;
+  rebuildOrder();
+  S.studyStep = remapStep(S.studyStep, oldMax, key, phase, totalSteps() - 1);
   doc.manual = {};
   S.over = {};
   S.selKey = null;
   doc.sel = Math.min(doc.sel, S.steps - 1);
   go();
 };
+
+$('passArea').oninput = e => {
+  S.passArea = +e.target.value;
+  $('vPassArea').textContent = S.passArea;
+  passList();
+  render();
+};
+$('orderReset').onclick = () => resetOrder();
 $('gamma').oninput = e => { S.gamma = +e.target.value; go(); };
 $('ed').oninput = e => {
   const j = doc.sel - 1;
@@ -162,7 +175,7 @@ function handleRefineShape() {
     $('refTxt').textContent = 'That shape has no contour detail left to refine.';
     return;
   }
-  const level = levelName(activePass());
+  const level = blockName(activeLayer()) + (activeSize() === 'L' ? ' large' : ' small');
   processImage(false);
 
   const delta = res.limit - res.before;
@@ -297,5 +310,6 @@ let panelSaved = false;
 try { panelSaved = localStorage.getItem(PANEL_KEY) === '1'; } catch (err) { /* storage unavailable */ }
 setPanelHidden(panelSaved);
 
+rebuildOrder();
 labels();
 startImage(sampleImage());

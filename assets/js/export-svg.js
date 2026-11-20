@@ -1,24 +1,31 @@
 /* Standalone, interactive stepped-SVG export. */
-import { $, S, doc, curvesEnabled, shade, levelOn, CONTOUR } from './state.js';
+import { $, S, doc, curvesEnabled, shade, parsePass, levelOn, blockName, CONTOUR } from './state.js';
 import { dPath } from './geometry.js';
-import { crosshairStr } from './render.js';
+import { crosshairStr, passShapes } from './render.js';
 
 export function steppedSvgStr() {
-  const layerCount = S.steps - 1;
-  const totalSteps = 1 + layerCount * 3;
+  const lc = S.steps - 1;
+  const passes = S.order.map(key => {
+    const { level, size } = parsePass(key);
+    return {
+      name: blockName(level).toUpperCase() + (size === 'L' ? ' LARGE' : ' SMALL'),
+      level,
+      size,
+      on: level < lc ? levelOn(level) : true
+    };
+  });
+  const totalSteps = 1 + 3 * passes.length;
   const toolbarH = 82;
   const outW = Math.max(doc.W, 360);
   const offsetX = (outW - doc.W) / 2;
   const sliderX = 16;
   const sliderW = outW - 32;
   const cv = curvesEnabled();
-  const on = [];
-  for (let j = 0; j < layerCount; j++) on.push(levelOn(j));
   const parts = [];
 
   parts.push('<?xml version="1.0" encoding="UTF-8"?>');
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${doc.H + toolbarH}" viewBox="0 0 ${outW} ${doc.H + toolbarH}" role="img" aria-labelledby="docTitle docDesc">`);
-  parts.push(`<title id="docTitle">Interactive value study — progressive grey steps</title><desc id="docDesc">Use the Previous and Next buttons, the slider, or the left and right arrow keys to reveal each value level in three stages: outline only, fill with outline, and fill with the outline removed.</desc>`);
+  parts.push(`<title id="docTitle">Interactive value study — progressive grey steps</title><desc id="docDesc">Use the Previous and Next buttons, the slider, or the left and right arrow keys to reveal each block-in pass (the large or small shapes of one value) in three stages: outline only, fill with outline, and fill with the outline removed.</desc>`);
   parts.push(`<rect width="${outW}" height="${doc.H + toolbarH}" fill="#ffffff"/>`);
   parts.push(`<rect width="${outW}" height="${toolbarH}" fill="#f7f7f7"/><path d="M0 ${toolbarH - 0.5}H${outW}" stroke="#dcdcdc"/>`);
 
@@ -32,25 +39,26 @@ export function steppedSvgStr() {
   parts.push(`<g id="stepSlider" role="slider" tabindex="0" aria-label="Progressive value step" aria-valuemin="0" aria-valuemax="${totalSteps - 1}" aria-valuenow="0" style="cursor:pointer;touch-action:none"><rect x="${sliderX}" y="47" width="${sliderW}" height="24" fill="transparent"/><line x1="${sliderX}" y1="59" x2="${sliderX + sliderW}" y2="59" stroke="#d6d6d6" stroke-width="4" stroke-linecap="round"/><line id="sliderProgress" x1="${sliderX}" y1="59" x2="${sliderX}" y2="59" stroke="#76b234" stroke-width="4" stroke-linecap="round"/><circle id="sliderThumb" cx="${sliderX}" cy="59" r="6" fill="#76b234" stroke="#ffffff" stroke-width="2"/></g>`);
   parts.push(`<g transform="translate(${offsetX} ${toolbarH})">`);
   parts.push(`<rect width="${doc.W}" height="${doc.H}" fill="#ffffff"/>`);
-  for (let j = 0; j < layerCount; j++) {
-    const d = (doc.layers[j] || []).map(q => dPath(q, cv)).join('');
-    const gray = shade(j + 1);
-    parts.push(`<g id="fill-${j}" visibility="${on[j] ? 'visible' : 'hidden'}"><path d="${d}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
-    parts.push(`<g id="outline-${j}" visibility="hidden"><path d="${d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
+  for (let i = 0; i < passes.length; i++) {
+    const p = passes[i];
+    const d = passShapes(p.level, p.size).map(q => dPath(q, cv)).join('');
+    const gray = shade(p.level + 1);
+    parts.push(`<g id="fill-${i}" visibility="${p.on ? 'visible' : 'hidden'}"><path d="${d}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
+    parts.push(`<g id="outline-${i}" visibility="hidden"><path d="${d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
   }
   /* Guide crosshair stays on top of every step, mirroring the on-screen study. */
   parts.push(crosshairStr());
   parts.push('</g>');
-  parts.push('<script><![CDATA[' + embeddedScript(layerCount, totalSteps, sliderX, sliderW, on) + ']]>');
+  parts.push('<script><![CDATA[' + embeddedScript(passes, totalSteps, sliderX, sliderW) + ']]>');
   parts.push('</scr' + 'ipt>');
   parts.push('</svg>');
   return parts.join('');
 }
 
-function embeddedScript(COUNT, TOTAL, X0, XW, ON) {
+function embeddedScript(PASSES, TOTAL, X0, XW) {
   return `(function(){
   'use strict';
-  const COUNT=${COUNT}, TOTAL=${TOTAL}, X0=${X0}, XW=${XW}, ON=${JSON.stringify(ON)};
+  const PASSES=${JSON.stringify(PASSES)}, N=PASSES.length, TOTAL=${TOTAL}, X0=${X0}, XW=${XW};
   const svg=document.documentElement;
   const byId=id=>document.getElementById(id);
   const title=byId('stageTitle'), sub=byId('stageSub'), count=byId('stepCount');
@@ -58,25 +66,24 @@ function embeddedScript(COUNT, TOTAL, X0, XW, ON) {
   const prev=byId('prevStep'), next=byId('nextStep');
   let current=0, dragging=false;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-  function levelName(j){return j===COUNT-1?'BLACK':'G'+j;}
   function setStep(value){
    current=clamp(Math.round(Number(value)||0),0,TOTAL-1);
-   for(let j=0;j<COUNT;j++){
+   const n=current-1, idx=current>0?Math.floor(n/3):0, phase=current>0?n%3:0;
+   for(let i=0;i<N;i++){
     let fill=false,outline=false;
-    if(ON[j]&&current>0){
-     const n=current-1,level=Math.floor(n/3),phase=n%3;
-     if(j<level)fill=true;
-     else if(j===level){fill=phase>=1;outline=phase<=1;}
+    if(PASSES[i].on&&current>0){
+     if(i<idx)fill=true;
+     else if(i===idx){fill=phase>=1;outline=phase<=1;}
     }
-    byId('fill-'+j).setAttribute('visibility',fill?'visible':'hidden');
-    byId('outline-'+j).setAttribute('visibility',outline?'visible':'hidden');
+    byId('fill-'+i).setAttribute('visibility',fill?'visible':'hidden');
+    byId('outline-'+i).setAttribute('visibility',outline?'visible':'hidden');
    }
    let heading,detail;
    if(current===0){heading='PURE WHITE';detail='Blank white base';}
    else{
-    const n=current-1,j=Math.floor(n/3),phase=n%3,name=levelName(j);
-    heading=name+' · '+(phase===0?'OUTLINE ONLY':phase===1?'FILL + OUTLINE':'OUTLINE REMOVED');
-    detail='Value level '+(j+1)+' of '+COUNT+' · '+(phase===0?'Contour only':phase===1?'Grey fill added; contour remains':'Clean fill; contour hidden');
+    const pass=PASSES[Math.min(idx,N-1)];
+    heading=pass.name+' · '+(phase===0?'OUTLINE ONLY':phase===1?'FILL + OUTLINE':'OUTLINE REMOVED');
+    detail='Pass '+(idx+1)+' of '+N+' · '+(phase===0?'Contour only':phase===1?'Grey fill added; contour remains':'Clean fill; contour hidden');
    }
    title.textContent=heading;sub.textContent=detail;count.textContent=current+' / '+(TOTAL-1);
    const x=X0+(TOTAL===1?0:current/(TOTAL-1))*XW;

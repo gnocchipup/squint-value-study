@@ -23,6 +23,9 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - **Levels shown** switches per value level (G0 … Black), all on by default; a level that is off
   leaves its fills, contours, hit areas and split dots out of both panes and out of the SVG/PDF
   exports, while its threshold and polygons are kept.
+- **Block-in order**: each value splits into a large and a small pass at a settable area threshold,
+  and a draggable list (plus ↑/↓ and **Reset order**) sets the block-in sequence. The step slider
+  follows the order: 8 passes at 5 greys, 24 steps, three phases each.
 - Pre-filters, thresholds, gamma, smoothing, segment budget.
 - Exports: stepped SVG, PDF, copy current step SVG.
 - Settings panel can be hidden from the header (**Hide panel** / **Show panel**) or with `\`, giving
@@ -48,6 +51,7 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Crosshair-grid suite: 29/29 checks in headless Edge at 1440×900 and 390×844 — defaults (1 + 1, 0.9 opacity, 6/4 dash, 2.6 px white halo + 1.3 px green core, last child of the study SVG), V and H set independently to 3, lines land on the quarter marks (480×600 → x 120/240/360, y 150/300/450), values clamp to 1–3 and the inputs normalise on change, opacity 0 removes the group. Stepped SVG carries the crosshair after every outline group inside the artwork group and omits it at 0; the 13-page PDF drew 13 dash passes and 156 moveTo/lineTo pairs (12 segments per page: halo + core, right pane only) and drew none at 0. No mobile overflow; screenshots reviewed at step 6 (3 × 3) and step 12 (1 × 1).
 - Step-preservation suite: 18/18 checks in headless Edge — at the last step, adding a grey moves 12/12 to 15/15 and stays on BLACK · OUTLINE REMOVED; step 6 is untouched when greys go 5 → 7 (range 18) or 4 (range 9), keeping G1 · OUTLINE REMOVED; last step 9 → 3 when dropping to 2 greys and the study is still complete (fills present); step 0 stays PURE WHITE while greys go 2 → 9; step 7 survives 9 → 5 → 9; a four-tick drag from 9 → 5 greys at the end lands on 12/12, not an intermediate step; zero runtime errors. Screenshot reviewed.
 - Levels-shown suite: 30/30 checks in headless Edge at 1440×900 — four switches (G0/G1/G2/Black) all on by default and the finished study carries all four tones (191/128/64/0); switching G1 off removes 128 from the study and live canvas and dims its threshold chip; G0 + Black leaves only 191 and 0; at step 8 a hidden G2 contributes no contour and switching it back restores its fill and contour; switches survive grey-count changes by level name (4 greys keeps G1 off while the new Black stays on, G2 returns off, Black stays off when it becomes the third level); hidden black loses its hit paths and split dots and the badge reads "(hidden)"; the stepped SVG carries `ON=[true,false,false,true]`, starts disabled groups hidden and, loaded in an iframe and stepped to 12 / 12, shows only fill-0 and fill-3; the PDF painted only #bfbfbf and #000000 (26 fill calls); zero runtime errors. Screenshot reviewed.
+- Block-in suite: 48/48 checks in headless Edge at 1440×900 and 390×844 — eight passes in default order with shape counts, 24-step slider, step 1/2/3 phases on G0 large, step 13 opening the small passes over all four large tones, the last step filling every non-empty pass; ↓/↑ buttons and an HTML5 drag (DataTransfer + DragEvent) reorder the list while the current pass stays in view; the area slider at 100 / 8000 px² shifts shapes between large and small (11/20 → 24/7 → 9/22) and shrinks the leading pass d from 6933 to 3940; hiding G1 dims and drops both its passes; grey-count changes rebuild the order (6 passes at 4 greys, default restored at 5) while keeping a mid-study pass/phase or the finished last step; polygon selection is scoped to the pass in view (a large G0 shape is editable at pass 1, and switching to the G0 small pass clears the editor while exposing the small hit areas); the stepped SVG has 8 per-pass groups, `TOTAL=25`, pass names, follows a reorder (fill 0 black) and ends at 24 / 24 with every group visible; the PDF has 25 pages titled with pass and size; crosshair still drawn last; no runtime errors; no mobile overflow. Screenshots reviewed.
 - PDF header suite: 32 structural checks on a 13-page export (xref offsets, stream lengths, shared logo form BBox and 4 fills, one /Link annotation per page, green right-aligned label, no text-title fallback). Rendered pages 1, 6 and 13 with the Windows PDF engine to confirm the logo and link appear on every page.
 - Settings-panel suite: 21/21 checks in headless Edge via CDP at 1440×900, 1100×900 and 390×844 —
   button presence/copy/ARIA, sidebar `display:none`, single-column shell, pane widths 503 → 686 px,
@@ -69,6 +73,7 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Crosshair guides scaled up: **V** and **H** counts (1–3 lines per axis, 16 boxes at 3 + 3), a thicker high-contrast halo + green core with a 0.9 default opacity, and the crosshair is now part of the stepped SVG and PDF exports.
 - Step slider no longer rewinds when the grey count changes: `remapStep()` keeps the current level and phase (a complete study stays complete) and only clamps when the new range is shorter.
 - Per-level **Levels shown** switches (G0 … Black) filter fills, contours, hit areas and split dots in both panes and in the stepped SVG and PDF exports, while thresholds and polygons are untouched.
+- **Block-in passes**: every value splits into a large and a small shape pass at a settable area threshold, and a draggable order list (drag or ↑/↓) drives the step slider, the stepped SVG and the PDF.
 
 ## Known issues / deliberate behaviour
 
@@ -77,6 +82,11 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - A level switched off in **Levels shown** keeps its three steps in the progression (they simply
   show no change), so step numbering, exports and the PDF page count stay stable. The polygon data
   is preserved, so switching the level back on restores its shapes and any selection.
+- A pass can be empty when no shape of that level falls on its side of the area threshold; it still
+  owns its three steps and simply paints nothing, so the order list and step numbers stay stable.
+- Polygon editing is scoped to the pass in view: only that pass's shapes get hit areas, and
+  `curShape()` ignores a selection made in another pass of the same level, so stepping to a new
+  pass leaves the editor waiting for a click.
 - "Refine current shape" targets the polygon selected on the active level; only shapes on that level
   are clickable, and at step 0 the active level is G0.
 - Per-shape selections are tied to a level; switching levels leaves the editor waiting for a click.
@@ -108,3 +118,5 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - v3.0: **Levels shown** switches per value level (G0 … Black) filter fills, contours, hit areas and
   dots from both panes and from the SVG/PDF exports, so a study can be reduced to a chosen subset of
   values.
+- v3.1: block-in passes — each value splits at a settable area into a large and a small shape pass,
+  and a draggable pass order drives the study, the stepped SVG and the PDF.

@@ -1,5 +1,5 @@
 /* Landscape PDF export: one page per progressive step, reference + study. */
-import { $, S, doc, clamp, crossCount, OVERLAY, CONTOUR, CROSS } from './state.js';
+import { $, S, doc, clamp, crossCount, stepMeta, blockName, totalSteps, OVERLAY, CONTOUR, CROSS } from './state.js';
 import { stepParts } from './render.js';
 
 const PDF_W = 842;
@@ -115,13 +115,10 @@ function drawStudyPane(ctx, step, isOverlay, refImg, scale) {
 }
 
 function stepTitleAscii(step) {
-  const layerCount = S.steps - 1;
-  if (step === 0) return 'Pure white - blank base';
-  const n = step - 1;
-  const j = Math.floor(n / 3);
-  const phase = n % 3;
-  const name = j === layerCount - 1 ? 'Black' : 'G' + j;
-  const ph = phase === 0 ? 'outline only' : phase === 1 ? 'fill + outline' : 'outline removed';
+  const meta = stepMeta(step);
+  if (!meta) return 'Pure white - blank base';
+  const name = blockName(meta.level) + (meta.size === 'L' ? ' large' : ' small');
+  const ph = meta.phase === 0 ? 'outline only' : meta.phase === 1 ? 'fill + outline' : 'outline removed';
   return name + ' - ' + ph;
 }
 
@@ -328,8 +325,7 @@ export async function exportPdf(btnId) {
     const refHref = S.studyGray ? doc.srcGray : doc.srcColor;
     const refImg = await loadImg(refHref);
     logoOps = logoPdfOps();
-    const layerCount = S.steps - 1;
-    const totalSteps = 1 + layerCount * 3;
+    const total = totalSteps();
     const scale = clamp(820 / doc.W, 0.5, 4);
     const cw = Math.max(1, Math.round(doc.W * scale));
     const ch = Math.max(1, Math.round(doc.H * scale));
@@ -338,7 +334,7 @@ export async function exportPdf(btnId) {
     cv.height = ch;
     const ctx = cv.getContext('2d');
     const pages = [];
-    for (let step = 0; step < totalSteps; step++) {
+    for (let step = 0; step < total; step++) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, cw, ch);
       drawStudyPane(ctx, step, true, refImg, scale);

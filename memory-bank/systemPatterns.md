@@ -27,6 +27,10 @@ assets/js/
 - `S.levelOn` maps level names (`G0`, `G1`, … `B`) to `false` when a level is switched off in
   **Levels shown**; a missing entry means on. `levelOn(j)` clamps the lookup to the level's name,
   so switches survive grey-count changes.
+- `S.passArea` (default 1500 px²) splits each level's shapes into large and small; `S.order` is the
+  user's block-in sequence of pass keys (`'0L'`, `'2S'`, …). `rebuildOrder()` reconciles that list
+  with the grey count, keeping custom positions and slotting new large passes after the last large
+  pass and new small passes at the end.
 - `doc` holds per-image data: dimensions, luminance, thresholds, manual thresholds, selected grey,
   layers, cached contours (`LP`) and error curves (`EC`), source data URLs.
 - Both are exported objects, not reassigned imports, so modules stay acyclic and live-updating.
@@ -35,16 +39,25 @@ assets/js/
 
 ## Step model
 
-- `layerCount = steps - 1`.
-- `totalSteps = 1 + 3 * layerCount`.
-- Changing the grey count keeps the study in place: `remapStep(step, oldSteps, newSteps)` keeps the
-  same step number (so the same level and phase stay in view), clamps it into the new range, and
-  maps a study that was on its last step to the new last step. `app.js` calls it before assigning
-  `S.steps`.
-- Step 0 = white base. For step > 0: `j = floor((step-1)/3)`, `phase = (step-1) % 3`.
-- `activeLayer()` returns `j` (0 at step 0); `activePass()` is `layerCount` naming (`W`, `G0..`,
-  `B`).
-- `stepParts(step)` returns fills for `j < level`, plus fill/outline rules for the current level.
+- A value level has shapes, and the shapes split at `S.passArea` into a **large** and a **small**
+  pass. `S.order` lists those passes (`<level><L|S>`) in block-in order; the default is every large
+  pass by value, then every small pass by value.
+- `totalSteps = 1 + 3 * S.order.length` (8 passes → 24 steps at 5 greys).
+- Pass keys are parsed with `parsePass(key)`; levels are labelled `blockName(level)` (`G0`, …,
+  `Black`).
+- `stepMeta(step)` returns `{ index, level, size, phase }` (null at step 0): `index` is the position
+  in `S.order`, `phase` 0/1/2 is outline, fill + outline, outline removed. `activeLayer()` and
+  `activeSize()` read the same meta.
+- Changing the grey count keeps the study on the same pass and phase: `remapStep(step, oldMax,
+  oldKey, oldPhase, newMax)` looks the old pass key up in the rebuilt order, and a study that was
+  on its last step moves to the new last step.
+- Reordering passes (`reorderPass`, `resetOrder`) re-finds the current pass by key, so the step the
+  artist is looking at does not jump to another pass when rows move.
+- Selection is pass-scoped: `curShape()` only returns a polygon that belongs to the active pass's
+  shape group (the same set that receives hit areas), so stepping to another pass empties the
+  editor until a shape in the new pass is clicked.
+- `stepParts(step)` fills every earlier pass, applies the phase to the current one, and skips passes
+  whose level is hidden or whose shape group is empty.
 
 ## Processing pipeline
 
@@ -70,22 +83,28 @@ assets/js/
 
 ## Rendering
 
-- `stepParts(step)` skips levels where `levelOn(j)` is false, so both panes, the PDF panes and the
-  copied step SVG all follow the **Levels shown** switches without extra branching.
+- `partitions()` splits each level's shapes at `S.passArea` into `{ L, S }`, cached against the
+  current `doc.layers` array and threshold; `passShapes(level, size)` and `passCount` read it.
+- `stepParts(step)` walks `S.order` up to the current pass, skipping hidden levels, so both panes,
+  the PDF panes and the copied step SVG all follow the order and the **Levels shown** switches
+  without extra branching.
 - `liveSvgStr(true)` = source image + step fills + the same contour as the study (white halo,
-  blue line, `lineOpacity`) + vertex dots + clickable hit paths for the active level (polygon mode
-  only). Hit paths and split dots are only drawn when the active level is on; `.hit` paths are
-  transparent until hovered/selected.
+  blue line, `lineOpacity`) + vertex dots + clickable hit paths for the active pass (polygon mode
+  only). Hit paths and split dots are only drawn when the active pass's level is on; `.hit` paths
+  are transparent until hovered/selected.
 - `studySvgStr()` = white rect + step fills + dark contours + the crosshair group drawn last
   (so it is never covered; `S.crossOpacity` 0 removes it). `crosshairStr()` is exported and
   reused by the stepped SVG export.
 - The crosshair draws `crossCount(S.crossV)` vertical and `crossCount(S.crossH)` horizontal
   lines at `k/(n+1)` of the image, as one path stroked twice: a 2.6 px white halo at 55 %
   under a 1.3 px `CROSS` (#76b234) core, dashed 6/4.
+- `passList()` builds the draggable order rows (grip, swatch, name, shape count, ↑/↓ buttons);
+  `reorderPass` handles both the buttons and HTML5 drag/drop.
 - `render()` clamps the step, updates slider/nav, rewrites both panes, then updates the editor.
-- `steppedSvgStr()` emits every level's `fill-j`/`outline-j` groups, starts disabled ones
-  `visibility="hidden"`, and passes an `ON` map into the embedded script so a switched-off level is
-  never revealed while stepping. The step count is unchanged, so hidden levels simply show no change.
+- `steppedSvgStr()` emits a `fill-i`/`outline-i` pair per pass (in `S.order` order), starts
+  hidden-level passes `visibility="hidden"`, and passes a `PASSES` array (name, level, size, on)
+  into the embedded script, which fills passes before the current index and applies the phase to it.
+- The PDF writer takes its page count from `totalSteps()`, so it stays one page per step.
 
 ## PDF export
 
