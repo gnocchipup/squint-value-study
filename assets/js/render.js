@@ -1,7 +1,7 @@
 /* Rendering for the merged live-canvas / value-study workspace. */
 import {
   $, S, doc, clamp, layerCount, totalSteps, activeLayer, activePass,
-  curvesEnabled, shade, levelName, OVERLAY, CONTOUR
+  curvesEnabled, shade, levelName, crossCount, OVERLAY, CONTOUR, CROSS
 } from './state.js';
 import { dPath, area } from './geometry.js';
 import { errAt, getCurve } from './polygons.js';
@@ -89,16 +89,28 @@ export function liveSvgStr(interactive) {
   return s + '</svg>';
 }
 
-/* Guide crosshair pinned to the centre of the study. It is emitted after every
-   fill and contour so no value level can cover it; the Cross slider only fades
-   it (0 removes it from the markup entirely). */
-function crosshairStr() {
+/* Guide crosshair for the study. V and H set how many evenly-spaced lines each
+   axis draws (1-3), so 3 + 3 lines split the image into 16 boxes. It is emitted
+   after every fill and contour so no value level can cover it; the Cross slider
+   only fades it (0 removes it from the markup entirely). A white halo keeps the
+   green line legible over dark fills and pale ones alike. */
+export function crosshairStr() {
   if (!(S.crossOpacity > 0)) return '';
-  const cx = (doc.W / 2).toFixed(1);
-  const cy = (doc.H / 2).toFixed(1);
-  return `<g opacity="${S.crossOpacity}" stroke="#76b234" stroke-width="0.5" stroke-dasharray="4 4">
-   <line x1="${cx}" y1="0" x2="${cx}" y2="${doc.H}"/>
-   <line x1="0" y1="${cy}" x2="${doc.W}" y2="${cy}"/>
+  const v = crossCount(S.crossV);
+  const h = crossCount(S.crossH);
+  const f = n => Math.round(n * 10) / 10;
+  let d = '';
+  for (let k = 1; k <= v; k++) {
+    const x = f((doc.W * k) / (v + 1));
+    d += 'M' + x + ' 0V' + f(doc.H);
+  }
+  for (let k = 1; k <= h; k++) {
+    const y = f((doc.H * k) / (h + 1));
+    d += 'M0 ' + y + 'H' + f(doc.W);
+  }
+  return `<g opacity="${S.crossOpacity}" stroke-dasharray="6 4" stroke-linecap="round">
+   <path d="${d}" fill="none" stroke="#ffffff" stroke-width="2.6" opacity="0.55"/>
+   <path d="${d}" fill="none" stroke="${CROSS}" stroke-width="1.3"/>
   </g>`;
 }
 

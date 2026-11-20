@@ -32,6 +32,9 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
 - **Live-canvas display options** — fills, split dots and curved paths. The blue reference contour
   is drawn from the same data as the value study, so it appears in the outline phases, disappears
   when the study removes the outline, and fades with the Line slider (0 hides it).
+- **Guide crosshair** — 1–3 vertical and 1–3 horizontal guide lines over the value study (3 + 3
+  divides the image into 16 boxes) for judging placement and proportion. The **Cross** slider sets
+  opacity (0 hides it); while visible, the crosshair is included in the SVG and PDF exports.
 - **Lichess-inspired light palette** (neutral greys + a single green accent, one shade lighter
   than lichess) with a matching dark theme.
 - **Keyboard-first stepping** — arrow keys, Home/End and PageUp/PageDown, plus `\` to show or
@@ -70,6 +73,8 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 7. Step through the study with **← Prev / Next →**, the slider, **Play**, or the arrow keys.
    Each level has three phases: *outline only* → *fill + outline* → *outline removed*. The live
    canvas mirrors those phases, and the **Line** slider controls the reference contour's opacity.
+   The **Cross** slider sets the guide crosshair's opacity, and **V**/**H** set how many vertical
+   and horizontal guide lines it draws (1–3 each).
 8. When the settings are settled, click **Hide panel** (or press `\`) to give the whole window to
    the live canvas and the study. **Show panel** brings the settings back; the button stays in the
    header, and the last choice is restored on the next visit.
@@ -82,6 +87,7 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 | Fills | On |
 | Split dots / Curved paths | Off |
 | Reference contour | Mirrors the study phase; Line slider sets opacity (0 hides) |
+| Guide crosshair | 1 × 1 lines on the study at 90% opacity; **V**/**H** set 1–3 lines per axis, **Cross** sets opacity |
 | Shape style | Smooth curves |
 | Polygon type | Containing (edges outside the shape) |
 | Default edge limit per shape | 250 |

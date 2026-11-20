@@ -55,6 +55,9 @@ former workspace modes (preview and value study) are merged.
 - PDF header now uses the app logo instead of the "Squint" text title: the inline SVG paths are converted to PDF vector ops at export time and drawn once per page through a shared Form XObject. A right-aligned green link to the hosted app sits in the header, clickable via a per-page /Link /URI annotation.
 - Crosshair fixed: it is now the last element of the study SVG, pinned to the image centre, 0.5 px dashed, and driven by one Cross opacity slider (`crossOpacity`, default 0.6, 0 hides it). The old Cross X / Cross Y position sliders were removed.
 - Added guide crosshair to the value study: Cross opacity range input in workbar-opts, `crossOpacity` state in state.js, crosshair dashed lines rendered on the study pane SVG, slider wiring in app.js.
+- Crosshair is now a grid: **V** and **H** number inputs beside the Cross opacity slider set 1–3 evenly spaced lines per axis, so 3 + 3 lines divide the study into 16 boxes (1 + 1 keeps the old centre cross). `crossV` / `crossH` live in `S` and go through `crossCount()` (1–3 clamp); the inputs normalise on `change`.
+- Crosshair visibility raised: a 1.3 px green core over a 2.6 px translucent white halo, 6/4 dashes and a 0.9 default opacity (was 0.5 px, 4/4, 0.6), so it reads over pale and dark fills; the Cross slider is still the only way to tone it down, and 0 removes it from the markup.
+- The crosshair is now exported: `crosshairStr()` is shared with the stepped SVG (painted after every outline group, inside the artwork group) and the PDF rasteriser draws the same halo + core on the study pane of every page. Both omit it entirely when the Cross opacity is 0.
 
 ## Decisions
 

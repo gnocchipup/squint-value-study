@@ -1,5 +1,5 @@
 /* Application wiring: controls, keyboard, image input and init. */
-import { $, S, doc, clamp, totalSteps, activePass, levelName } from './state.js';
+import { $, S, doc, clamp, totalSteps, activePass, levelName, crossCount } from './state.js';
 import { loadCanvas, sampleImage, readFile } from './image.js';
 import { processImage } from './pipeline.js';
 import { render, labels, curShape, studySvgStr } from './render.js';
@@ -227,6 +227,10 @@ $('lineOpacity').oninput = e => { S.lineOpacity = +e.target.value; render(); };
 $('fillOpacity').oninput = e => { S.fillOpacity = +e.target.value; render(); };
 $('studyGray').onchange = e => { S.studyGray = e.target.checked; render(); };
 $('crossOpacity').oninput = e => { S.crossOpacity = +e.target.value; render(); };
+$('crossV').oninput = e => { S.crossV = crossCount(e.target.value); render(); };
+$('crossH').oninput = e => { S.crossH = crossCount(e.target.value); render(); };
+$('crossV').onchange = e => { e.target.value = S.crossV; };
+$('crossH').onchange = e => { e.target.value = S.crossH; };
 
 /* ---------- copy & export ---------- */
 $('copy').onclick = async () => {
@@ -278,6 +282,8 @@ $('studyGray').checked = S.studyGray;
 $('lineOpacity').value = S.lineOpacity;
 $('fillOpacity').value = S.fillOpacity;
 $('crossOpacity').value = S.crossOpacity;
+$('crossV').value = S.crossV;
+$('crossH').value = S.crossH;
 $('mode').value = S.mode;
 $('ptype').value = S.ptype;
 $('maxs').value = S.maxSides;

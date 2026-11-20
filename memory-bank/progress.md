@@ -15,6 +15,9 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Live-canvas toggles: fills, split dots, curved paths. The blue reference contour mirrors the
   study's outline phase and fades with the Line slider; unselected hit areas are invisible until
   hovered.
+- Guide crosshair: independent **V** and **H** line counts (1–3 each; 3 + 3 = 16 boxes), a white
+  halo under a green core with 6/4 dashes, and a Cross opacity slider that fades or hides it. It is
+  included in the stepped SVG and in every PDF page's study pane.
 - Pre-filters, thresholds, gamma, smoothing, segment budget.
 - Exports: stepped SVG, PDF, copy current step SVG.
 - Settings panel can be hidden from the header (**Hide panel** / **Show panel**) or with `\`, giving
@@ -37,6 +40,7 @@ Feature-complete for the requested merge and restructure. Validated in headless 
   stayed at 4; re-refining at 4 px returned it to 89 edges. Deselecting disables the button.
 - Screenshots reviewed at 1440×900 and 390×844.
 - Crosshair suite: 73 checks across all 13 steps (present, painted after every fill/contour, centred, 0.5 px, opacity mirrored, hidden at 0) plus a live CDP run at step 4 — crosshair on top, both axes centred and full-span, opacity slider live, zero console errors. A preview page confirmed G0 fill, fully dark and opacity-0 rendering.
+- Crosshair-grid suite: 29/29 checks in headless Edge at 1440×900 and 390×844 — defaults (1 + 1, 0.9 opacity, 6/4 dash, 2.6 px white halo + 1.3 px green core, last child of the study SVG), V and H set independently to 3, lines land on the quarter marks (480×600 → x 120/240/360, y 150/300/450), values clamp to 1–3 and the inputs normalise on change, opacity 0 removes the group. Stepped SVG carries the crosshair after every outline group inside the artwork group and omits it at 0; the 13-page PDF drew 13 dash passes and 156 moveTo/lineTo pairs (12 segments per page: halo + core, right pane only) and drew none at 0. No mobile overflow; screenshots reviewed at step 6 (3 × 3) and step 12 (1 × 1).
 - PDF header suite: 32 structural checks on a 13-page export (xref offsets, stream lengths, shared logo form BBox and 4 fills, one /Link annotation per page, green right-aligned label, no text-title fallback). Rendered pages 1, 6 and 13 with the Windows PDF engine to confirm the logo and link appear on every page.
 - Settings-panel suite: 21/21 checks in headless Edge via CDP at 1440×900, 1100×900 and 390×844 —
   button presence/copy/ARIA, sidebar `display:none`, single-column shell, pane widths 503 → 686 px,
@@ -55,6 +59,7 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Guide cross slider added to value study (Cross X / Cross Y controls render dashed crosshair on study pane).
 - Crosshair corrected: pinned to the centre, drawn as the top layer of the study SVG so no fill or contour can hide it, thinned to a 0.5 px dashed line, and controlled by a single Cross opacity slider; Cross X / Cross Y removed.
 - PDF export header: the logo replaces the "Squint" text title (inline SVG paths converted to PDF vector ops, shared Form XObject, uniform 26/230 scale), and a right-aligned green label links to https://gnocchipup.github.io/squint-value-study/ through a /Link /URI annotation on every page.
+- Crosshair guides scaled up: **V** and **H** counts (1–3 lines per axis, 16 boxes at 3 + 3), a thicker high-contrast halo + green core with a 0.9 default opacity, and the crosshair is now part of the stepped SVG and PDF exports.
 
 ## Known issues / deliberate behaviour
 
@@ -83,3 +88,6 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - v2.6: PDF header carries the app logo as vector paths plus a clickable link to the hosted site.
 - v2.7: settings panel can be collapsed (header toggle or `\`), letting the live canvas and value
   study take the full window; the preference persists across visits.
+- v2.8: crosshair becomes a configurable guide grid (1–3 vertical + 1–3 horizontal lines, 16 boxes
+  at maximum) with a high-contrast white-halo/green-core stroke, and it is exported in the stepped
+  SVG and the PDF study panes.

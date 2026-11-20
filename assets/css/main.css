@@ -126,6 +126,9 @@ button.pri:hover:not(:disabled){background:var(--accent-strong);border-color:var
 .workbar-opts{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .opacity-ctrl{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink);margin:0}
 .opacity-ctrl input[type=range]{width:64px;margin:0}
+.cross-lines{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ink)}
+.cross-lines span{color:var(--mut);font-weight:600}
+.cross-lines input[type=number]{width:42px;min-height:26px;padding:2px 4px;margin:0;text-align:center;font-size:11px;font-weight:700}
 .workbar-sub{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:9px}
 .view-toggles{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .export-group{display:flex;gap:7px;flex-wrap:wrap}

@@ -1,5 +1,5 @@
 /* Landscape PDF export: one page per progressive step, reference + study. */
-import { $, S, doc, clamp, OVERLAY, CONTOUR } from './state.js';
+import { $, S, doc, clamp, crossCount, OVERLAY, CONTOUR, CROSS } from './state.js';
 import { stepParts } from './render.js';
 
 const PDF_W = 842;
@@ -50,6 +50,35 @@ function pdfEsc(s) {
     .replace(/\)/g, '\\)');
 }
 
+/* Guide crosshair, drawn over the study pane exactly as the on-screen SVG does:
+   1-3 evenly-spaced dashed lines per axis, a white halo under a green core. */
+function drawCrosshair(ctx) {
+  if (!(S.crossOpacity > 0)) return;
+  const v = crossCount(S.crossV);
+  const h = crossCount(S.crossH);
+  ctx.save();
+  ctx.setLineDash([6, 4]);
+  ctx.lineCap = 'round';
+  for (const [colour, width, alpha] of [['#ffffff', 2.6, 0.55], [CROSS, 1.3, 1]]) {
+    ctx.globalAlpha = S.crossOpacity * alpha;
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    for (let k = 1; k <= v; k++) {
+      const x = (doc.W * k) / (v + 1);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, doc.H);
+    }
+    for (let k = 1; k <= h; k++) {
+      const y = (doc.H * k) / (h + 1);
+      ctx.moveTo(0, y);
+      ctx.lineTo(doc.W, y);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 /* Draw one study pane onto a 2D canvas (mirrors the on-screen SVG panes). */
 function drawStudyPane(ctx, step, isOverlay, refImg, scale) {
   const { fills, outlines } = stepParts(step);
@@ -81,6 +110,7 @@ function drawStudyPane(ctx, step, isOverlay, refImg, scale) {
     ctx.strokeStyle = CONTOUR;
     ctx.lineWidth = 1.35;
     for (const q of outlines) ctx.stroke(new Path2D(q.d));
+    drawCrosshair(ctx);
   }
 }
 

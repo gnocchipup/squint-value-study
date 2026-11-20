@@ -1,6 +1,7 @@
 /* Standalone, interactive stepped-SVG export. */
 import { $, S, doc, curvesEnabled, shade, CONTOUR } from './state.js';
 import { dPath } from './geometry.js';
+import { crosshairStr } from './render.js';
 
 export function steppedSvgStr() {
   const layerCount = S.steps - 1;
@@ -35,6 +36,8 @@ export function steppedSvgStr() {
     parts.push(`<g id="fill-${j}" visibility="visible"><path d="${d}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
     parts.push(`<g id="outline-${j}" visibility="hidden"><path d="${d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
   }
+  /* Guide crosshair stays on top of every step, mirroring the on-screen study. */
+  parts.push(crosshairStr());
   parts.push('</g>');
   parts.push('<script><![CDATA[' + embeddedScript(layerCount, totalSteps, sliderX, sliderW) + ']]>');
   parts.push('</scr' + 'ipt>');

@@ -9,6 +9,8 @@ export const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 export const OVERLAY = '#3692e7';
 /* Value-study contour colour, mirrored on the live canvas. */
 export const CONTOUR = '#2b2b2b';
+/* Guide-crosshair colour on the value study (same accent as the UI). */
+export const CROSS = '#76b234';
 
 /* User settings. */
 export const S = {
@@ -28,7 +30,9 @@ export const S = {
   lineOpacity: 0.9,
   fillOpacity: 0.25,
   studyGray: false,
-  crossOpacity: 0.6,
+  crossOpacity: 0.9,
+  crossV: 1,
+  crossH: 1,
   tol: 3,
   /* live-canvas render options */
   fills: true,
@@ -59,6 +63,9 @@ export const totalSteps = () => 1 + layerCount() * 3;
 export const activeLayer = () =>
   S.studyStep <= 0 ? 0 : clamp(Math.floor((S.studyStep - 1) / 3), 0, layerCount() - 1);
 export const activePass = () => activeLayer() + 1;
+
+/* Crosshair lines per axis: 1-3 each (3 vertical + 3 horizontal = 16 boxes). */
+export const crossCount = v => clamp(Math.round(+v) || 1, 1, 3);
 
 export const curvesEnabled = () => S.curves && S.mode !== 'poly';
 export const shade = i => Math.round(255 * (1 - i / (S.steps - 1)));

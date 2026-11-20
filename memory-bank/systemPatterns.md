@@ -15,7 +15,7 @@ assets/js/
   polygons.js   polyBuild, error curve, stagedLimit, refinePasses
   pipeline.js   thresholds → masks → contours → layers → chips/editor/render
   render.js     stepParts, live/study SVG, chips, editor, panel, labels, render
-  export-svg.js steppedSvgStr (embedded interactive script)
+  export-svg.js steppedSvgStr (embedded interactive script, reuses crosshairStr)
   export-pdf.js PDF writer with JPEG panes, vector logo, site link
   app.js        wiring, keyboard, file input, init
 ```
@@ -23,7 +23,7 @@ assets/js/
 ## State
 
 - `S` holds user settings and render options (`mode`, `ptype`, `maxSides`, `over`, `steps`,
-  `studyStep`, `fills`, `outlines`, `dots`, `curves`, opacities, filter settings).
+  `studyStep`, `fills`, `outlines`, `dots`, `curves`, opacities, `crossV`/`crossH`, filter settings).
 - `doc` holds per-image data: dimensions, luminance, thresholds, manual thresholds, selected grey,
   layers, cached contours (`LP`) and error curves (`EC`), source data URLs.
 - Both are exported objects, not reassigned imports, so modules stay acyclic and live-updating.
@@ -66,8 +66,12 @@ assets/js/
 - `liveSvgStr(true)` = source image + step fills + the same contour as the study (white halo,
   blue line, `lineOpacity`) + vertex dots + clickable hit paths for the active level (polygon mode
   only). Hit paths are transparent until hovered/selected.
-- `studySvgStr()` = white rect + step fills + dark contours + a centred crosshair group drawn last
-  (so it is never covered; `S.crossOpacity` 0 removes it).
+- `studySvgStr()` = white rect + step fills + dark contours + the crosshair group drawn last
+  (so it is never covered; `S.crossOpacity` 0 removes it). `crosshairStr()` is exported and
+  reused by the stepped SVG export.
+- The crosshair draws `crossCount(S.crossV)` vertical and `crossCount(S.crossH)` horizontal
+  lines at `k/(n+1)` of the image, as one path stroked twice: a 2.6 px white halo at 55 %
+  under a 1.3 px `CROSS` (#76b234) core, dashed 6/4.
 - `render()` clamps the step, updates slider/nav, rewrites both panes, then updates the editor.
 
 ## PDF export
@@ -83,6 +87,9 @@ assets/js/
 - The hosted app is linked from a right-aligned green label (`SITE_LABEL`) in the header. Its x is
   computed from Helvetica AFM advance widths, and each page carries a `/Link` annotation with a
   `/URI` action over the label, so the whole line is clickable.
+- `drawCrosshair()` mirrors the SVG crosshair on the rasterised study pane (never the reference
+  pane): same 1–3 lines per axis, 6/4 dash, white halo then green core, scaled with the pane. It is
+  skipped entirely at opacity 0, so a hidden crosshair never reaches the PDF.
 
 ## Conventions
 
