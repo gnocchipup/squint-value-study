@@ -1,7 +1,7 @@
 /* Rendering for the merged live-canvas / value-study workspace. */
 import {
   $, S, doc, clamp, layerCount, totalSteps, activeLayer, activePass,
-  curvesEnabled, shade, levelName, crossCount, OVERLAY, CONTOUR, CROSS
+  curvesEnabled, shade, levelName, crossCount, levelOn, OVERLAY, CONTOUR, CROSS
 } from './state.js';
 import { dPath, area } from './geometry.js';
 import { errAt, getCurve } from './polygons.js';
@@ -14,6 +14,7 @@ export function stepParts(step) {
   const lc = layerCount();
   const cv = curvesEnabled();
   for (let j = 0; j < lc; j++) {
+    if (!levelOn(j)) continue;
     let fill = false;
     let outline = false;
     if (step > 0) {
@@ -74,13 +75,14 @@ export function liveSvgStr(interactive) {
   }
 
   const list = doc.layers[activeLayer()] || [];
-  if (S.dots) {
+  const activeOn = levelOn(activeLayer());
+  if (S.dots && activeOn) {
     for (const q of list)
       for (let i = 0; i < q.length; i += 2)
         s += `<circle cx="${q[i].toFixed(1)}" cy="${q[i + 1].toFixed(1)}" r="2.4" fill="${OVERLAY}" stroke="#fff" stroke-width="0.8"/>`;
   }
 
-  if (interactive && S.mode === 'poly') {
+  if (interactive && S.mode === 'poly' && activeOn) {
     for (const q of list.slice().sort((a, b) => area(b) - area(a))) {
       const on = q.key === S.selKey;
       s += `<path class="hit${on ? ' sel' : ''}" data-k="${q.key}" d="${dPath(q, cv)}"/>`;
@@ -143,7 +145,9 @@ function updateStepCopy() {
   $('studyStepCount').textContent = step + ' / ' + (total - 1);
   $('stepStageSub').textContent = detail;
   $('vPass').textContent = 'STEP ' + step + ' / ' + (total - 1);
-  const edit = S.mode === 'poly' ? 'Editing ' + levelName(activePass()) + ' · ' : '';
+  const edit = S.mode === 'poly'
+    ? 'Editing ' + levelName(activePass()) + (levelOn(activeLayer()) ? ' · ' : ' (hidden) · ')
+    : '';
   $('liveBadge').textContent =
     edit + 'Line ' + Math.round(S.lineOpacity * 100) + '% · Fill ' + Math.round(S.fillOpacity * 100) + '%';
 }
@@ -168,13 +172,43 @@ export function chips() {
   for (let i = 0; i < S.steps; i++) {
     const d = document.createElement('div');
     const g = shade(i);
-    d.className = 'chip' + (i === 0 ? ' fix' : '') + (i === doc.sel ? ' sel' : '');
+    d.className = 'chip' + (i === 0 ? ' fix' : '') + (i === doc.sel ? ' sel' : '') +
+      (i > 0 && !levelOn(i - 1) ? ' off' : '');
     d.style.background = `rgb(${g},${g},${g})`;
     d.style.color = g > 128 ? '#000' : '#fff';
     d.textContent = levelName(i);
     if (i > 0) d.onclick = () => { doc.sel = i; chips(); editor(); };
     c.appendChild(d);
   }
+  levelToggles();
+}
+
+/* One switch per value level (G0 … black), all on by default. A level that is
+   switched off keeps its threshold and polygons, but its fills, contours and
+   hit areas are left out of the study, the live canvas and the exports. */
+function levelToggles() {
+  const box = $('levelToggles');
+  const n = layerCount();
+  if (box.querySelectorAll('input[data-level]').length !== n) {
+    box.querySelectorAll('.level-toggle').forEach(el => el.remove());
+    for (let j = 0; j < n; j++) {
+      const key = levelName(j + 1);
+      const name = j === n - 1 ? 'Black' : 'G' + j;
+      const l = document.createElement('label');
+      l.className = 'chk level-toggle';
+      l.title = 'Show ' + name + ' in the study, the live canvas and the exports';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.dataset.level = key;
+      cb.onchange = () => { S.levelOn[key] = cb.checked; chips(); render(); };
+      l.appendChild(cb);
+      l.appendChild(document.createTextNode(name));
+      box.appendChild(l);
+    }
+  }
+  [...box.querySelectorAll('input[data-level]')].forEach((cb, j) => {
+    cb.checked = levelOn(j);
+  });
 }
 
 export function editor() {
@@ -189,6 +223,7 @@ export function editor() {
 
 export function curShape() {
   const j = activeLayer();
+  if (!levelOn(j)) return null;
   return S.selKey && doc.layers[j] ? doc.layers[j].find(a => a.key === S.selKey) : null;
 }
 

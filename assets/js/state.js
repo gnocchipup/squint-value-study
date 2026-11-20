@@ -19,6 +19,8 @@ export const S = {
   maxSides: 250,
   over: {},
   selKey: null,
+  /* Per-level switches; a level is shown unless its entry is set to false. */
+  levelOn: {},
   steps: 5,
   gamma: 0.8,
   seg: 1500,
@@ -80,3 +82,8 @@ export const crossCount = v => clamp(Math.round(+v) || 1, 1, 3);
 export const curvesEnabled = () => S.curves && S.mode !== 'poly';
 export const shade = i => Math.round(255 * (1 - i / (S.steps - 1)));
 export const levelName = i => (i === 0 ? 'W' : i === S.steps - 1 ? 'B' : 'G' + (i - 1));
+
+/* Is the value level (layer) part of the study? Off means its fills, contours
+   and hit areas are left out of both panes and of the exports. Switches are
+   stored by level name (G0, G1, … B) so they survive a change in grey count. */
+export const levelOn = j => S.levelOn[levelName(j + 1)] !== false;

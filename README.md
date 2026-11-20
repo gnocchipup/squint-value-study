@@ -35,6 +35,9 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
 - **Guide crosshair** — 1–3 vertical and 1–3 horizontal guide lines over the value study (3 + 3
   divides the image into 16 boxes) for judging placement and proportion. The **Cross** slider sets
   opacity (0 hides it); while visible, the crosshair is included in the SVG and PDF exports.
+- **Levels shown** — one switch per value level under the grey chips (G0 … black). All are on by
+  default; switch one off and its fills, contours and hit areas leave the study, the live canvas and
+  the exports, so you can study, say, just G0 and black.
 - **Lichess-inspired light palette** (neutral greys + a single green accent, one shade lighter
   than lichess) with a matching dark theme.
 - **Keyboard-first stepping** — arrow keys, Home/End and PageUp/PageDown, plus `\` to show or
@@ -60,7 +63,8 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 1. **Load an image** with *Choose image* (or start from the sample).
 2. Set the number of **grey steps** and adjust thresholds if needed. The study keeps its current
    step when the count changes — the same level and phase stay in view, and a study that was
-   already complete stays complete.
+   already complete stays complete. **Levels shown** switches any grey (or black) out of the study
+   without changing its threshold or polygons.
 3. Pick a **shape style**:
    - *Smooth curves* — tolerance-based simplification, good for painterly output.
    - *Blocking polygons* — polygon construction with per-shape edge limits.
@@ -90,6 +94,7 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 | Split dots / Curved paths | Off |
 | Reference contour | Mirrors the study phase; Line slider sets opacity (0 hides) |
 | Guide crosshair | 1 × 1 lines on the study at 90% opacity; **V**/**H** set 1–3 lines per axis, **Cross** sets opacity |
+| Levels shown | Every level on (G0 … black); switches are kept by level name across grey-count changes |
 | Shape style | Smooth curves |
 | Polygon type | Containing (edges outside the shape) |
 | Default edge limit per shape | 250 |

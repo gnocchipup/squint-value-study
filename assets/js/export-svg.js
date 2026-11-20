@@ -1,5 +1,5 @@
 /* Standalone, interactive stepped-SVG export. */
-import { $, S, doc, curvesEnabled, shade, CONTOUR } from './state.js';
+import { $, S, doc, curvesEnabled, shade, levelOn, CONTOUR } from './state.js';
 import { dPath } from './geometry.js';
 import { crosshairStr } from './render.js';
 
@@ -12,6 +12,8 @@ export function steppedSvgStr() {
   const sliderX = 16;
   const sliderW = outW - 32;
   const cv = curvesEnabled();
+  const on = [];
+  for (let j = 0; j < layerCount; j++) on.push(levelOn(j));
   const parts = [];
 
   parts.push('<?xml version="1.0" encoding="UTF-8"?>');
@@ -33,22 +35,22 @@ export function steppedSvgStr() {
   for (let j = 0; j < layerCount; j++) {
     const d = (doc.layers[j] || []).map(q => dPath(q, cv)).join('');
     const gray = shade(j + 1);
-    parts.push(`<g id="fill-${j}" visibility="visible"><path d="${d}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
+    parts.push(`<g id="fill-${j}" visibility="${on[j] ? 'visible' : 'hidden'}"><path d="${d}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
     parts.push(`<g id="outline-${j}" visibility="hidden"><path d="${d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
   }
   /* Guide crosshair stays on top of every step, mirroring the on-screen study. */
   parts.push(crosshairStr());
   parts.push('</g>');
-  parts.push('<script><![CDATA[' + embeddedScript(layerCount, totalSteps, sliderX, sliderW) + ']]>');
+  parts.push('<script><![CDATA[' + embeddedScript(layerCount, totalSteps, sliderX, sliderW, on) + ']]>');
   parts.push('</scr' + 'ipt>');
   parts.push('</svg>');
   return parts.join('');
 }
 
-function embeddedScript(COUNT, TOTAL, X0, XW) {
+function embeddedScript(COUNT, TOTAL, X0, XW, ON) {
   return `(function(){
   'use strict';
-  const COUNT=${COUNT}, TOTAL=${TOTAL}, X0=${X0}, XW=${XW};
+  const COUNT=${COUNT}, TOTAL=${TOTAL}, X0=${X0}, XW=${XW}, ON=${JSON.stringify(ON)};
   const svg=document.documentElement;
   const byId=id=>document.getElementById(id);
   const title=byId('stageTitle'), sub=byId('stageSub'), count=byId('stepCount');
@@ -61,7 +63,7 @@ function embeddedScript(COUNT, TOTAL, X0, XW) {
    current=clamp(Math.round(Number(value)||0),0,TOTAL-1);
    for(let j=0;j<COUNT;j++){
     let fill=false,outline=false;
-    if(current>0){
+    if(ON[j]&&current>0){
      const n=current-1,level=Math.floor(n/3),phase=n%3;
      if(j<level)fill=true;
      else if(j===level){fill=phase>=1;outline=phase<=1;}

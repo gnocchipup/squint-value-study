@@ -70,6 +70,11 @@ button.pri:hover:not(:disabled){background:var(--accent-strong);border-color:var
 .chip{flex:1;height:37px;font-size:10px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;cursor:pointer;position:relative;min-width:0}
 .chip.sel::after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:3px;background:var(--accent);border-radius:3px}
 .chip.fix{cursor:default}
+.chip.off{opacity:.45}
+.level-toggles{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px dashed var(--line)}
+.level-toggle-label{flex:0 0 100%;font-size:10px;color:var(--mut);font-weight:600;margin:0 0 1px}
+.level-toggle{padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);font-size:10px;font-weight:600;gap:5px}
+.level-toggle input{margin:0;accent-color:var(--accent)}
 .chk{display:inline-flex;gap:7px;align-items:center;margin:0;font-size:11px;color:var(--ink);white-space:nowrap}
 .chk input{accent-color:var(--accent);margin:0}
 .note{font-size:11px;color:var(--mut);margin-top:7px;line-height:1.45}
