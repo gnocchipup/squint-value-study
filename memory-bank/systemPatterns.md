@@ -57,7 +57,8 @@ assets/js/
   shape group (the same set that receives hit areas), so stepping to another pass empties the
   editor until a shape in the new pass is clicked.
 - `stepParts(step)` fills every earlier pass, applies the phase to the current one, and skips passes
-  whose level is hidden or whose shape group is empty.
+  whose level is hidden or whose shape group is empty. The fills are then sorted by level, so paint
+  order stays light → dark whatever `S.order` says; reordering only changes when a pass appears.
 
 ## Processing pipeline
 
@@ -83,11 +84,16 @@ assets/js/
 
 ## Rendering
 
-- `partitions()` splits each level's shapes at `S.passArea` into `{ L, S }`, cached against the
-  current `doc.layers` array and threshold; `passShapes(level, size)` and `passCount` read it.
+- `partitions()` splits each level into shape groups at `S.passArea`, cached against the current
+  `doc.layers` array and threshold; `passGroups`, `passLoops`, `passCount` and `passD` read it.
+- Loops are grouped by containment first (`levelGroups()`, cached per layers array): an even-depth
+  ring carries its direct holes, while an island inside a hole is its own group. This is what keeps
+  a hole a hole — the hole loop and its ring must be painted in the same pass and the same path,
+  because the even-odd rule only cuts a hole when the surrounding ring is in that path too. A
+  group's area is its ring area minus its holes, which is what the threshold classifies.
 - `stepParts(step)` walks `S.order` up to the current pass, skipping hidden levels, so both panes,
   the PDF panes and the copied step SVG all follow the order and the **Levels shown** switches
-  without extra branching.
+  without extra branching. `passD()` writes each group's loops together so holes stay holes.
 - `liveSvgStr(true)` = source image + step fills + the same contour as the study (white halo,
   blue line, `lineOpacity`) + vertex dots + clickable hit paths for the active pass (polygon mode
   only). Hit paths and split dots are only drawn when the active pass's level is on; `.hit` paths
@@ -101,9 +107,11 @@ assets/js/
 - `passList()` builds the draggable order rows (grip, swatch, name, shape count, ↑/↓ buttons);
   `reorderPass` handles both the buttons and HTML5 drag/drop.
 - `render()` clamps the step, updates slider/nav, rewrites both panes, then updates the editor.
-- `steppedSvgStr()` emits a `fill-i`/`outline-i` pair per pass (in `S.order` order), starts
-  hidden-level passes `visibility="hidden"`, and passes a `PASSES` array (name, level, size, on)
-  into the embedded script, which fills passes before the current index and applies the phase to it.
+- `steppedSvgStr()` emits a `fill-i`/`outline-i` pair per pass, with the fill groups placed in
+  value order (ids keep the pass index) and every outline group after them, so the block-in order
+  never changes the paint stack. Hidden-level passes start `visibility="hidden"`, and a `PASSES`
+  array (name, level, size, on) drives the embedded script, which fills passes before the current
+  index and applies the phase to it.
 - The PDF writer takes its page count from `totalSteps()`, so it stays one page per step.
 
 ## PDF export

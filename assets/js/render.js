@@ -7,30 +7,111 @@ import {
 import { dPath, area } from './geometry.js';
 import { errAt, getCurve } from './polygons.js';
 
-/* Level shapes split into large / small at S.passArea. The split is cached
-   against the current layers array and threshold, so a step change is cheap. */
+/* A level's contours are plain loops; they only read as holes because fills use
+   even-odd. A hole loop must therefore be painted with the ring around it, so
+   loops are grouped by containment before they are split into passes. */
+function pointInLoop(q, x, y) {
+  let inside = false;
+  const n = q.length / 2;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = q[2 * i], yi = q[2 * i + 1];
+    const xj = q[2 * j], yj = q[2 * j + 1];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/* Each level becomes a list of shape groups: an even-depth ring plus its direct
+   holes. Islands inside holes are their own groups. Cached per layers array. */
+let groupCache = { layers: null, levels: [] };
+function levelGroups() {
+  if (groupCache.layers === doc.layers) return groupCache.levels;
+  const levels = doc.layers.map(loops => {
+    const info = loops.map(q => {
+      let minx = Infinity;
+      let miny = Infinity;
+      let maxx = -Infinity;
+      let maxy = -Infinity;
+      for (let i = 0; i < q.length; i += 2) {
+        const x = q[i];
+        const y = q[i + 1];
+        if (x < minx) minx = x;
+        if (x > maxx) maxx = x;
+        if (y < miny) miny = y;
+        if (y > maxy) maxy = y;
+      }
+      return { q, a: area(q), minx, miny, maxx, maxy, parent: -1, depth: 0 };
+    });
+    const order = info.map((_, i) => i).sort((i, k) => info[k].a - info[i].a);
+    order.forEach((idx, s) => {
+      const b = info[idx];
+      let parent = -1;
+      let pa = Infinity;
+      for (let t = 0; t < s; t++) {
+        const p = info[order[t]];
+        if (p.a <= b.a || p.a >= pa) continue;
+        if (b.minx < p.minx || b.maxx > p.maxx || b.miny < p.miny || b.maxy > p.maxy) continue;
+        if (!pointInLoop(p.q, b.q[0], b.q[1])) continue;
+        parent = order[t];
+        pa = p.a;
+      }
+      b.parent = parent;
+      b.depth = parent < 0 ? 0 : info[parent].depth + 1;
+    });
+    const holes = info.map(() => []);
+    info.forEach((it, i) => { if (it.parent >= 0) holes[it.parent].push(i); });
+    const groups = [];
+    info.forEach((it, i) => {
+      if (it.depth % 2 !== 0) return;
+      const inner = holes[i];
+      const net = inner.reduce((s, h) => s - info[h].a, it.a);
+      groups.push({ loops: [it.q, ...inner.map(h => info[h].q)], area: Math.max(0, net) });
+    });
+    return groups;
+  });
+  groupCache = { layers: doc.layers, levels };
+  return levels;
+}
+
+/* Groups split into large / small at S.passArea, cached against the layers
+   array and the threshold, so a step change is cheap. */
 let partCache = { layers: null, area: 0, parts: [] };
 function partitions() {
   if (partCache.layers === doc.layers && partCache.area === S.passArea) return partCache.parts;
-  const parts = [];
-  for (const list of doc.layers) {
+  const parts = levelGroups().map(groups => {
     const big = [];
     const small = [];
-    for (const q of list) (area(q) >= S.passArea ? big : small).push(q);
-    parts.push({ L: big, S: small });
-  }
+    for (const g of groups) (g.area >= S.passArea ? big : small).push(g);
+    return { L: big, S: small };
+  });
   partCache = { layers: doc.layers, area: S.passArea, parts };
   return parts;
 }
 
-/* The shapes of one pass (a level's large or small group). */
-export function passShapes(level, size) {
+/* The shape groups of one pass (a level's large or small set). */
+export function passGroups(level, size) {
   const p = partitions()[level];
   return p ? p[size] || [] : [];
 }
 
-/* Shape count for one pass, used by the order list. */
-export const passCount = (level, size) => passShapes(level, size).length;
+/* Every contour in the pass, for hit areas and split dots. */
+export function passLoops(level, size) {
+  const out = [];
+  for (const g of passGroups(level, size)) out.push(...g.loops);
+  return out;
+}
+
+/* Shape count for one pass (rings and islands, holes are part of their ring). */
+export const passCount = (level, size) => passGroups(level, size).length;
+
+/* Path data for one pass. Each group is written as a unit so its holes stay
+   holes under the even-odd fill rule. */
+export function passD(level, size, cv) {
+  let d = '';
+  for (const g of passGroups(level, size))
+    for (const q of g.loops) d += dPath(q, cv);
+  return d;
+}
 
 /* What the given progressive step fills and outlines: every earlier pass is
    filled, the current pass follows its phase, later passes are untouched. */
@@ -55,11 +136,14 @@ export function stepParts(step) {
       }
     }
     if (!fill && !outline) continue;
-    const d = passShapes(level, size).map(q => dPath(q, cv)).join('');
+    const d = passD(level, size, cv);
     if (!d) continue;
-    if (fill) fills.push({ d, gray: shade(level + 1) });
+    if (fill) fills.push({ d, gray: shade(level + 1), level });
     if (outline) outlines.push({ d });
   }
+  /* Stack fills by value, not by block-in order: darker levels always paint over
+     lighter ones, so moving a pass earlier only changes when it appears. */
+  fills.sort((a, b) => a.level - b.level);
   return { fills, outlines };
 }
 
@@ -102,7 +186,7 @@ export function liveSvgStr(interactive) {
   }
 
   const meta = stepMeta(S.studyStep);
-  const list = meta ? passShapes(meta.level, meta.size) : (doc.layers[0] || []);
+  const list = meta ? passLoops(meta.level, meta.size) : (doc.layers[0] || []);
   const activeOn = levelOn(meta ? meta.level : 0);
   if (S.dots && activeOn) {
     for (const q of list)
@@ -357,7 +441,7 @@ export function curShape() {
   const q = doc.layers[j].find(a => a.key === S.selKey);
   if (!q) return null;
   /* Only the pass in view is editable, the same set that gets hit areas. */
-  const list = meta ? passShapes(meta.level, meta.size) : (doc.layers[0] || []);
+  const list = meta ? passLoops(meta.level, meta.size) : (doc.layers[0] || []);
   return list.includes(q) ? q : null;
 }
 

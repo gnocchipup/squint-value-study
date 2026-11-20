@@ -41,7 +41,9 @@ No build step, no dependencies — plain HTML, CSS and ES modules.
 - **Block-in passes** — every value is split into **large** and **small** shapes at a settable area
   threshold, and each pass blocks in on its own. Drag the pass rows (or use ↑ / ↓) to set the
   order — for example all the large masses first, then the small details — and the step slider
-  follows that order.
+  follows that order. The order sets *when* a pass appears, not how tones stack: fills still paint
+  light → dark, so moving black to the front never hides it under a lighter value. Holes travel
+  with the shape around them, so splitting a level never fills a hole.
 - **Lichess-inspired light palette** (neutral greys + a single green accent, one shade lighter
   than lichess) with a matching dark theme.
 - **Keyboard-first stepping** — arrow keys, Home/End and PageUp/PageDown, plus `\` to show or

@@ -1,7 +1,6 @@
 /* Standalone, interactive stepped-SVG export. */
 import { $, S, doc, curvesEnabled, shade, parsePass, levelOn, blockName, CONTOUR } from './state.js';
-import { dPath } from './geometry.js';
-import { crosshairStr, passShapes } from './render.js';
+import { crosshairStr, passD } from './render.js';
 
 export function steppedSvgStr() {
   const lc = S.steps - 1;
@@ -39,12 +38,18 @@ export function steppedSvgStr() {
   parts.push(`<g id="stepSlider" role="slider" tabindex="0" aria-label="Progressive value step" aria-valuemin="0" aria-valuemax="${totalSteps - 1}" aria-valuenow="0" style="cursor:pointer;touch-action:none"><rect x="${sliderX}" y="47" width="${sliderW}" height="24" fill="transparent"/><line x1="${sliderX}" y1="59" x2="${sliderX + sliderW}" y2="59" stroke="#d6d6d6" stroke-width="4" stroke-linecap="round"/><line id="sliderProgress" x1="${sliderX}" y1="59" x2="${sliderX}" y2="59" stroke="#76b234" stroke-width="4" stroke-linecap="round"/><circle id="sliderThumb" cx="${sliderX}" cy="59" r="6" fill="#76b234" stroke="#ffffff" stroke-width="2"/></g>`);
   parts.push(`<g transform="translate(${offsetX} ${toolbarH})">`);
   parts.push(`<rect width="${doc.W}" height="${doc.H}" fill="#ffffff"/>`);
-  for (let i = 0; i < passes.length; i++) {
+  /* Fills paint in value order (light → dark) whatever the block-in order, so an
+     earlier pass can never be covered by a lighter one; outlines sit above all
+     fills, matching the study pane. Group ids stay tied to the pass index. */
+  const dOf = passes.map(p => passD(p.level, p.size, cv));
+  const fillOrder = passes.map((p, i) => i).sort((a, b) => passes[a].level - passes[b].level);
+  for (const i of fillOrder) {
     const p = passes[i];
-    const d = passShapes(p.level, p.size).map(q => dPath(q, cv)).join('');
     const gray = shade(p.level + 1);
-    parts.push(`<g id="fill-${i}" visibility="${p.on ? 'visible' : 'hidden'}"><path d="${d}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
-    parts.push(`<g id="outline-${i}" visibility="hidden"><path d="${d}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
+    parts.push(`<g id="fill-${i}" visibility="${p.on ? 'visible' : 'hidden'}"><path d="${dOf[i]}" fill="rgb(${gray},${gray},${gray})" fill-rule="evenodd" stroke="none"/></g>`);
+  }
+  for (let i = 0; i < passes.length; i++) {
+    parts.push(`<g id="outline-${i}" visibility="hidden"><path d="${dOf[i]}" fill="none" fill-rule="evenodd" stroke="${CONTOUR}" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g>`);
   }
   /* Guide crosshair stays on top of every step, mirroring the on-screen study. */
   parts.push(crosshairStr());
