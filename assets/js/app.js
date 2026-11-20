@@ -1,5 +1,5 @@
 /* Application wiring: controls, keyboard, image input and init. */
-import { $, S, doc, clamp, totalSteps, activePass, levelName, crossCount } from './state.js';
+import { $, S, doc, clamp, totalSteps, activePass, levelName, crossCount, remapStep } from './state.js';
 import { loadCanvas, sampleImage, readFile } from './image.js';
 import { processImage } from './pipeline.js';
 import { render, labels, curShape, studySvgStr } from './render.js';
@@ -84,12 +84,13 @@ document.addEventListener('keydown', e => {
 
 /* ---------- processing settings ---------- */
 $('steps').oninput = e => {
-  S.steps = +e.target.value;
+  const next = +e.target.value;
+  S.studyStep = remapStep(S.studyStep, S.steps, next);
+  S.steps = next;
   doc.manual = {};
   S.over = {};
   S.selKey = null;
   doc.sel = Math.min(doc.sel, S.steps - 1);
-  S.studyStep = 0;
   go();
 };
 $('gamma').oninput = e => { S.gamma = +e.target.value; go(); };

@@ -8,6 +8,8 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 
 - Sample image loads and traces on first paint.
 - Merged workspace: live canvas + value study, shared step navigation, play, keyboard.
+- Changing the grey count keeps the step slider in place: the same level and phase stay in view, a
+  complete study stays complete, and the step only clamps when the new range is shorter.
 - Step phases render correctly in both panes.
 - Blocking polygon mode: clickable shapes, selection, per-shape limit (±1/±10/typed/reset/clear).
 - Auto-refine: a full pass resets the default limit to 4 and refines every shape on every level;
@@ -41,6 +43,7 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Screenshots reviewed at 1440×900 and 390×844.
 - Crosshair suite: 73 checks across all 13 steps (present, painted after every fill/contour, centred, 0.5 px, opacity mirrored, hidden at 0) plus a live CDP run at step 4 — crosshair on top, both axes centred and full-span, opacity slider live, zero console errors. A preview page confirmed G0 fill, fully dark and opacity-0 rendering.
 - Crosshair-grid suite: 29/29 checks in headless Edge at 1440×900 and 390×844 — defaults (1 + 1, 0.9 opacity, 6/4 dash, 2.6 px white halo + 1.3 px green core, last child of the study SVG), V and H set independently to 3, lines land on the quarter marks (480×600 → x 120/240/360, y 150/300/450), values clamp to 1–3 and the inputs normalise on change, opacity 0 removes the group. Stepped SVG carries the crosshair after every outline group inside the artwork group and omits it at 0; the 13-page PDF drew 13 dash passes and 156 moveTo/lineTo pairs (12 segments per page: halo + core, right pane only) and drew none at 0. No mobile overflow; screenshots reviewed at step 6 (3 × 3) and step 12 (1 × 1).
+- Step-preservation suite: 18/18 checks in headless Edge — at the last step, adding a grey moves 12/12 to 15/15 and stays on BLACK · OUTLINE REMOVED; step 6 is untouched when greys go 5 → 7 (range 18) or 4 (range 9), keeping G1 · OUTLINE REMOVED; last step 9 → 3 when dropping to 2 greys and the study is still complete (fills present); step 0 stays PURE WHITE while greys go 2 → 9; step 7 survives 9 → 5 → 9; a four-tick drag from 9 → 5 greys at the end lands on 12/12, not an intermediate step; zero runtime errors. Screenshot reviewed.
 - PDF header suite: 32 structural checks on a 13-page export (xref offsets, stream lengths, shared logo form BBox and 4 fills, one /Link annotation per page, green right-aligned label, no text-title fallback). Rendered pages 1, 6 and 13 with the Windows PDF engine to confirm the logo and link appear on every page.
 - Settings-panel suite: 21/21 checks in headless Edge via CDP at 1440×900, 1100×900 and 390×844 —
   button presence/copy/ARIA, sidebar `display:none`, single-column shell, pane widths 503 → 686 px,
@@ -60,6 +63,7 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - Crosshair corrected: pinned to the centre, drawn as the top layer of the study SVG so no fill or contour can hide it, thinned to a 0.5 px dashed line, and controlled by a single Cross opacity slider; Cross X / Cross Y removed.
 - PDF export header: the logo replaces the "Squint" text title (inline SVG paths converted to PDF vector ops, shared Form XObject, uniform 26/230 scale), and a right-aligned green label links to https://gnocchipup.github.io/squint-value-study/ through a /Link /URI annotation on every page.
 - Crosshair guides scaled up: **V** and **H** counts (1–3 lines per axis, 16 boxes at 3 + 3), a thicker high-contrast halo + green core with a 0.9 default opacity, and the crosshair is now part of the stepped SVG and PDF exports.
+- Step slider no longer rewinds when the grey count changes: `remapStep()` keeps the current level and phase (a complete study stays complete) and only clamps when the new range is shorter.
 
 ## Known issues / deliberate behaviour
 
@@ -91,3 +95,5 @@ Feature-complete for the requested merge and restructure. Validated in headless 
 - v2.8: crosshair becomes a configurable guide grid (1–3 vertical + 1–3 horizontal lines, 16 boxes
   at maximum) with a high-contrast white-halo/green-core stroke, and it is exported in the stepped
   SVG and the PDF study panes.
+- v2.9: changing the grey count keeps the study's step (same level and phase, complete stays
+  complete) instead of rewinding to pure white.

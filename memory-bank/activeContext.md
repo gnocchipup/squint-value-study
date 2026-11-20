@@ -58,6 +58,7 @@ former workspace modes (preview and value study) are merged.
 - Crosshair is now a grid: **V** and **H** number inputs beside the Cross opacity slider set 1–3 evenly spaced lines per axis, so 3 + 3 lines divide the study into 16 boxes (1 + 1 keeps the old centre cross). `crossV` / `crossH` live in `S` and go through `crossCount()` (1–3 clamp); the inputs normalise on `change`.
 - Crosshair visibility raised: a 1.3 px green core over a 2.6 px translucent white halo, 6/4 dashes and a 0.9 default opacity (was 0.5 px, 4/4, 0.6), so it reads over pale and dark fills; the Cross slider is still the only way to tone it down, and 0 removes it from the markup.
 - The crosshair is now exported: `crosshairStr()` is shared with the stepped SVG (painted after every outline group, inside the artwork group) and the PDF rasteriser draws the same halo + core on the study pane of every page. Both omit it entirely when the Cross opacity is 0.
+- Changing the grey count no longer rewinds the step slider to pure white: `remapStep(step, oldSteps, newSteps)` in `state.js` keeps the same step number (so the same level and phase stay in view), clamps it into the new range, and maps a study that was on its last step to the new last step (12 → 15 when adding a grey, 9 → 3 when dropping to 2 greys). `app.js` applies it before assigning `S.steps`; the step slider's `max` still only updates once reprocessing finishes.
 
 ## Decisions
 

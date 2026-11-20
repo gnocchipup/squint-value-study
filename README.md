@@ -58,7 +58,9 @@ Then open <http://localhost:8000/>. Click **Load sample** to explore without an 
 ## Workflow
 
 1. **Load an image** with *Choose image* (or start from the sample).
-2. Set the number of **grey steps** and adjust thresholds if needed.
+2. Set the number of **grey steps** and adjust thresholds if needed. The study keeps its current
+   step when the count changes — the same level and phase stay in view, and a study that was
+   already complete stays complete.
 3. Pick a **shape style**:
    - *Smooth curves* — tolerance-based simplification, good for painterly output.
    - *Blocking polygons* — polygon construction with per-shape edge limits.

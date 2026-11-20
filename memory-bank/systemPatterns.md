@@ -34,6 +34,10 @@ assets/js/
 
 - `layerCount = steps - 1`.
 - `totalSteps = 1 + 3 * layerCount`.
+- Changing the grey count keeps the study in place: `remapStep(step, oldSteps, newSteps)` keeps the
+  same step number (so the same level and phase stay in view), clamps it into the new range, and
+  maps a study that was on its last step to the new last step. `app.js` calls it before assigning
+  `S.steps`.
 - Step 0 = white base. For step > 0: `j = floor((step-1)/3)`, `phase = (step-1) % 3`.
 - `activeLayer()` returns `j` (0 at step 0); `activePass()` is `layerCount` naming (`W`, `G0..`,
   `B`).

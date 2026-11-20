@@ -59,6 +59,16 @@ export const doc = {
 export const layerCount = () => S.steps - 1;
 export const totalSteps = () => 1 + layerCount() * 3;
 
+/* Keep the study where it is when the grey count changes. The same step number
+   is kept (so the same level and phase stay in view) unless it is past the new
+   range, and a study that had reached its last step moves to the new last step
+   instead of drifting back to an intermediate level. */
+export function remapStep(step, oldSteps, newSteps) {
+  const oldMax = 3 * (oldSteps - 1);
+  const newMax = 3 * (newSteps - 1);
+  return step >= oldMax ? newMax : clamp(step, 0, newMax);
+}
+
 /* The value level currently shown by the progressive step. */
 export const activeLayer = () =>
   S.studyStep <= 0 ? 0 : clamp(Math.floor((S.studyStep - 1) / 3), 0, layerCount() - 1);
